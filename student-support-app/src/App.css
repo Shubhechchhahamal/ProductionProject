@@ -1,0 +1,28 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.container {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f7aac0; /* Soft pink background */
+}
+
+.bubble {
+  background: white;
+  padding: 50px;
+  border-radius: 200px;
+  box-shadow: 0px 20px 60px rgba(0, 0, 0, 0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.logo {
+  width: 280px; /* Adjust size here */
+  height: auto;
+}
