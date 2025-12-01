@@ -6,7 +6,8 @@ import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./ProtectedRoute";
 import Profile from "./pages/Profile";
-import EditProfile from "./pages/EditProfile";   // ✅ FIXED IMPORT HERE
+import EditProfile from "./pages/EditProfile";
+import VerifyCode from "./pages/VerifyCode";   // ⭐ ADD THIS
 
 export default function App() {
   return (
@@ -15,6 +16,9 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Register />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+
+      {/* ⭐ ADD VERIFY CODE PAGE */}
+      <Route path="/verify-code" element={<VerifyCode />} />
 
       {/* Profile Page */}
       <Route
@@ -48,5 +52,3 @@ export default function App() {
     </Routes>
   );
 }
-
-

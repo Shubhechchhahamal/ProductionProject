@@ -4,21 +4,22 @@ import { doc, getDoc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { signOut } from "firebase/auth";
 
-// Convert country to a flag emoji
-function getFlagEmoji(country: string) {
-  if (!country) return "";
+// Convert country → 2-letter ISO country code for SVG flags
+function getCountryCode(country: string) {
+  if (!country) return null;
 
-  // Special case: Nepal has a unique flag emoji
-  if (country.toLowerCase().startsWith("nep")) {
-    return "🇳🇵";
-  }
+  const c = country.toLowerCase();
 
-  const code = country.slice(0, 2).toUpperCase();
-  return code.replace(/./g, char =>
-    String.fromCodePoint(127397 + char.charCodeAt(0))
-  );
+  if (c.startsWith("nep")) return "np";
+  if (c.startsWith("uni") || c.includes("kingdom")) return "gb";
+  if (c.startsWith("ind")) return "in";
+  if (c.startsWith("chi")) return "cn";
+  if (c.startsWith("pak")) return "pk";
+  if (c.startsWith("ban")) return "bd";
+  if (c.startsWith("sri")) return "lk";
+
+  return country.slice(0, 2).toLowerCase();
 }
-
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -43,7 +44,11 @@ export default function Dashboard() {
         const data = snapshot.data();
         setName(data.name || "");
         setCountry(data.country || "");
-        setLanguages(data.languages || []);
+        setLanguages(
+          Array.isArray(data.languages)
+            ? data.languages
+            : data.languages?.split(",") || []
+        );
       }
 
       setLoading(false);
@@ -67,18 +72,28 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-[#F8F3EF] text-[#7F5539] p-6">
-      <h1 className="text-3xl font-bold mb-2">
-        Welcome, {name} 👋
-      </h1>
+      <h1 className="text-3xl font-bold mb-1">Welcome, {name} 👋</h1>
 
-      {/* Minimal flag + languages */}
-      <p className="text-md text-[#7F5539] opacity-75 mb-6 flex items-center gap-2">
-        {country && <span>{getFlagEmoji(country)}</span>}
-        {languages.length > 0 && (
-          <span>{languages.join(", ")}</span>
-        )}
-      </p>
+    {/* Country Flag + Language */}
+<div className="flex items-center gap-3 mb-6">
 
+  {/* FLAG ONLY */}
+  {country && (
+    <img
+      src={`https://flagcdn.com/${getCountryCode(country)}.svg`}
+      alt="flag"
+      className="w-6 h-4 rounded-sm shadow"
+    />
+  )}
+
+  {/* Languages */}
+  {languages.length > 0 && (
+    <span className="opacity-70 text-sm">• {languages.join(", ")}</span>
+  )}
+</div>
+
+
+      {/* Buttons */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <button
           onClick={() => navigate("/profile")}
@@ -124,5 +139,4 @@ export default function Dashboard() {
     </div>
   );
 }
-
 

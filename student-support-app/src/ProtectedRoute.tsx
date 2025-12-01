@@ -13,7 +13,9 @@ export default function ProtectedRoute({ children }: any) {
     );
   }
 
+  // If not logged in → send to login
   if (!user) return <Navigate to="/login" replace />;
 
+  // If logged in → allow access
   return children;
 }

@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { setDoc, doc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
+import emailjs from "@emailjs/browser";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -13,47 +14,67 @@ export default function Register() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // Function to generate 6-digit OTP
+  const generateCode = () =>
+    Math.floor(100000 + Math.random() * 900000).toString();
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    console.log("Register button clicked");
-
-    // ONLY Leeds Beckett students allowed
-  if (
-  !email.endsWith("@leedsbeckett.ac.uk") &&
-  !email.endsWith("@student.leedsbeckett.ac.uk")
-) {
-  setError("Only Leeds Beckett University student emails are allowed.");
-  return;
-}
-
+    // Only Leeds Beckett emails allowed
+    if (
+      !email.endsWith("@leedsbeckett.ac.uk") &&
+      !email.endsWith("@student.leedsbeckett.ac.uk")
+    ) {
+      setError("Only Leeds Beckett University student emails are allowed.");
+      return;
+    }
 
     try {
+      // 1️⃣ Create the Firebase user
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
         password
       );
+      const user = userCredential.user;
 
-      // 🔥 Send verification email
-      await sendEmailVerification(userCredential.user);
+      // 2️⃣ Generate OTP
+      const code = generateCode();
+      const expireTime = new Date(Date.now() + 15 * 60 * 1000).toLocaleTimeString();
 
-      setSuccess("Verification email sent! Please check your inbox.");
+      // 3️⃣ Save OTP in Firestore
+      await setDoc(doc(db, "otp", user.uid), {
+        code,
+        createdAt: Date.now(),
+      });
 
-      // Save basic profile (not verified yet)
-      await setDoc(doc(db, "users", userCredential.user.uid), {
+      // 4️⃣ Save user profile with verified = false
+      await setDoc(doc(db, "users", user.uid), {
         name,
         email,
         verified: false,
         createdAt: new Date().toISOString(),
       });
 
-      // Optionally redirect to login after a delay
-      setTimeout(() => {
-        navigate("/login");
-      }, 2000);
+     // 5️⃣ Send OTP email via EmailJS
+await emailjs.send(
+  "Homeaway_app",          // SERVICE ID
+  "template_4z1h9lv",      // TEMPLATE ID
+  {
+    email: email,
+    passcode: code,
+    time: expireTime,
+  },
+  "sed1ZCO6P3qj2CcqK"      // PUBLIC KEY
+);
+
+
+      setSuccess("A verification code has been sent to your email.");
+      setTimeout(() => navigate("/verify-code"), 2000);
 
     } catch (err: any) {
+      console.error(err);
       setError(err.message);
     }
   };
@@ -92,10 +113,10 @@ export default function Register() {
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        {/* 🔴 Error Message */}
+        {/* Error Message */}
         {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
-        {/* 🟢 Success Message */}
+        {/* Success Message */}
         {success && <p className="text-green-600 text-sm text-center">{success}</p>}
 
         <button

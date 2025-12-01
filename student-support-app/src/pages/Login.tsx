@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../firebase";
+import { auth, db } from "../firebase";
 import { useNavigate } from "react-router-dom";
+import { doc, getDoc } from "firebase/firestore";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -27,12 +28,26 @@ export default function Login() {
         password
       );
 
-      if (!userCredential.user.emailVerified) {
-        setError("Please verify your email before logging in.");
+      // Get Firestore user doc
+      const ref = doc(db, "users", userCredential.user.uid);
+      const snap = await getDoc(ref);
+
+      if (!snap.exists()) {
+        setError("User profile missing. Contact support.");
         return;
       }
 
+      const data = snap.data();
+
+      // If NOT verified → send to verify page
+      if (data.verified === false) {
+        navigate("/verify-code");
+        return;
+      }
+
+      // Otherwise go to dashboard/home
       navigate("/home");
+
     } catch (err: any) {
       if (err.code === "auth/wrong-password") {
         setError("Incorrect password.");
@@ -92,3 +107,4 @@ export default function Login() {
     </div>
   );
 }
+
