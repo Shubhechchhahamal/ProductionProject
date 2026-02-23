@@ -1,17 +1,18 @@
 import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth, db } from "../firebase";
+import { auth } from "../firebase";
 import { useNavigate } from "react-router-dom";
-import { doc, getDoc } from "firebase/firestore";
 
 export default function Login() {
   const navigate = useNavigate();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
 
     if (
       !email.endsWith("@leedsbeckett.ac.uk") &&
@@ -28,24 +29,15 @@ export default function Login() {
         password
       );
 
-      // Get Firestore user doc
-      const ref = doc(db, "users", userCredential.user.uid);
-      const snap = await getDoc(ref);
+      const user = userCredential.user;
 
-      if (!snap.exists()) {
-        setError("User profile missing. Contact support.");
+      // ✅ Firebase built-in verification check
+      if (!user.emailVerified) {
+        setError("Please verify your email before logging in.");
+        await auth.signOut();
         return;
       }
 
-      const data = snap.data();
-
-      // If NOT verified → send to verify page
-      if (data.verified === false) {
-        navigate("/verify-code");
-        return;
-      }
-
-      // Otherwise go to dashboard/home
       navigate("/home");
 
     } catch (err: any) {
@@ -54,7 +46,7 @@ export default function Login() {
       } else if (err.code === "auth/user-not-found") {
         setError("No account found.");
       } else {
-        setError("Something went wrong.");
+        setError("Login failed. Try again.");
       }
     }
   };
@@ -75,6 +67,7 @@ export default function Login() {
           className="w-full p-2 border rounded"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          required
         />
 
         <input
@@ -83,9 +76,12 @@ export default function Login() {
           className="w-full p-2 border rounded"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          required
         />
 
-        {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+        {error && (
+          <p className="text-red-500 text-sm text-center">{error}</p>
+        )}
 
         <button
           type="submit"
@@ -107,4 +103,3 @@ export default function Login() {
     </div>
   );
 }
-

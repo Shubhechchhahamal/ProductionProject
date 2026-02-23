@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { setDoc, doc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
-import emailjs from "@emailjs/browser";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -14,14 +13,12 @@ export default function Register() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Function to generate 6-digit OTP
-  const generateCode = () =>
-    Math.floor(100000 + Math.random() * 900000).toString();
-
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+    setSuccess("");
 
-    // Only Leeds Beckett emails allowed
+    // Allow only university emails
     if (
       !email.endsWith("@leedsbeckett.ac.uk") &&
       !email.endsWith("@student.leedsbeckett.ac.uk")
@@ -31,51 +28,40 @@ export default function Register() {
     }
 
     try {
-      // 1️⃣ Create the Firebase user
+      // 1️⃣ Create Firebase Auth user
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
         password
       );
+
       const user = userCredential.user;
 
-      // 2️⃣ Generate OTP
-      const code = generateCode();
-      const expireTime = new Date(Date.now() + 15 * 60 * 1000).toLocaleTimeString();
+      // 2️⃣ Send Firebase verification email (LINK)
+      await sendEmailVerification(user);
 
-      // 3️⃣ Save OTP in Firestore
-      await setDoc(doc(db, "otp", user.uid), {
-        code,
-        createdAt: Date.now(),
-      });
-
-      // 4️⃣ Save user profile with verified = false
+      // 3️⃣ Save user profile in Firestore
       await setDoc(doc(db, "users", user.uid), {
         name,
         email,
-        verified: false,
         createdAt: new Date().toISOString(),
       });
 
-     // 5️⃣ Send OTP email via EmailJS
-await emailjs.send(
-  "Homeaway_app",          // SERVICE ID
-  "template_4z1h9lv",      // TEMPLATE ID
-  {
-    email: email,
-    passcode: code,
-    time: expireTime,
-  },
-  "sed1ZCO6P3qj2CcqK"      // PUBLIC KEY
-);
+      setSuccess("Verification email sent! Please check your inbox.");
 
-
-      setSuccess("A verification code has been sent to your email.");
-      setTimeout(() => navigate("/verify-code"), 2000);
+      // Redirect to login after short delay
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
 
     } catch (err: any) {
-      console.error(err);
-      setError(err.message);
+      if (err.code === "auth/email-already-in-use") {
+        setError("Email already registered.");
+      } else if (err.code === "auth/weak-password") {
+        setError("Password should be at least 6 characters.");
+      } else {
+        setError("Registration failed. Try again.");
+      }
     }
   };
 
@@ -95,6 +81,7 @@ await emailjs.send(
           className="w-full p-2 border rounded"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          required
         />
 
         <input
@@ -103,6 +90,7 @@ await emailjs.send(
           className="w-full p-2 border rounded"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          required
         />
 
         <input
@@ -111,13 +99,16 @@ await emailjs.send(
           className="w-full p-2 border rounded"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          required
         />
 
-        {/* Error Message */}
-        {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+        {error && (
+          <p className="text-red-500 text-sm text-center">{error}</p>
+        )}
 
-        {/* Success Message */}
-        {success && <p className="text-green-600 text-sm text-center">{success}</p>}
+        {success && (
+          <p className="text-green-600 text-sm text-center">{success}</p>
+        )}
 
         <button
           type="submit"
