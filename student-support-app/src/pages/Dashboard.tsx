@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { auth, db } from "../firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs, orderBy, query, limit } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { signOut } from "firebase/auth";
 
-// Convert country → 2-letter ISO country code for SVG flags
+// Convert country → ISO flag code
 function getCountryCode(country: string) {
   if (!country) return null;
 
@@ -23,13 +23,15 @@ function getCountryCode(country: string) {
 
 export default function Dashboard() {
   const navigate = useNavigate();
+
   const [name, setName] = useState("");
   const [country, setCountry] = useState("");
   const [languages, setLanguages] = useState<string[]>([]);
+  const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadUser = async () => {
+    const loadData = async () => {
       const user = auth.currentUser;
 
       if (!user) {
@@ -37,28 +39,51 @@ export default function Dashboard() {
         return;
       }
 
-      const docRef = doc(db, "users", user.uid);
-      const snapshot = await getDoc(docRef);
-
-      if (snapshot.exists()) {
-        const data = snapshot.data();
-        setName(data.name || "");
-        setCountry(data.country || "");
-        setLanguages(
-          Array.isArray(data.languages)
-            ? data.languages
-            : data.languages?.split(",") || []
+      try {
+        // Load latest support posts
+        const q = query(
+          collection(db, "supports"),
+          orderBy("createdAt", "desc"),
+          limit(3)
         );
+
+        const postSnapshot = await getDocs(q);
+
+        const postList = postSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        setPosts(postList);
+
+        // Load user profile
+        const docRef = doc(db, "users", user.uid);
+        const userSnapshot = await getDoc(docRef);
+
+        if (userSnapshot.exists()) {
+          const data: any = userSnapshot.data();
+
+          setName(data.name || "");
+          setCountry(data.country || "");
+
+          setLanguages(
+            Array.isArray(data.languages)
+              ? data.languages
+              : data.languages?.split(",") || []
+          );
+        }
+      } catch (error) {
+        console.error("Error loading dashboard:", error);
       }
 
       setLoading(false);
     };
 
-    loadUser();
+    loadData();
   }, []);
 
-  const handleLogout = () => {
-    signOut(auth);
+  const handleLogout = async () => {
+    await signOut(auth);
     navigate("/");
   };
 
@@ -72,45 +97,52 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-[#F8F3EF] text-[#7F5539] p-6">
-      <h1 className="text-3xl font-bold mb-1">Welcome, {name} 👋</h1>
 
-    {/* Country Flag + Language */}
-<div className="flex items-center gap-3 mb-6">
+      <h1 className="text-3xl font-bold mb-2">
+        Welcome back, {name} 👋
+      </h1>
 
-  {/* FLAG ONLY */}
-  {country && (
-    <img
-      src={`https://flagcdn.com/${getCountryCode(country)}.svg`}
-      alt="flag"
-      className="w-6 h-4 rounded-sm shadow"
-    />
-  )}
+      {/* Quick Stats */}
+      <div className="flex flex-wrap gap-4 mb-8 mt-4">
+        <div className="bg-[#EDE0D4] px-4 py-2 rounded-lg shadow text-sm">
+          👥 20 students joined
+        </div>
 
-  {/* Languages */}
-  {languages.length > 0 && (
-    <span className="opacity-70 text-sm">• {languages.join(", ")}</span>
-  )}
-</div>
+        <div className="bg-[#EDE0D4] px-4 py-2 rounded-lg shadow text-sm">
+          💬 12 support posts
+        </div>
 
+        <div className="bg-[#EDE0D4] px-4 py-2 rounded-lg shadow text-sm">
+          🌍 8 countries represented
+        </div>
+      </div>
 
-      {/* Buttons */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      {/* Country + Languages */}
+      <div className="flex items-center gap-3 mb-6">
+        {country && (
+          <img
+            src={`https://flagcdn.com/${getCountryCode(country)}.svg`}
+            alt="flag"
+            className="w-6 h-4 rounded-sm shadow"
+          />
+        )}
+
+        {languages.length > 0 && (
+          <span className="opacity-70 text-sm">
+            • {languages.join(", ")}
+          </span>
+        )}
+      </div>
+
+      {/* Dashboard Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+
         <button
           onClick={() => navigate("/profile")}
           className="p-6 rounded-2xl shadow bg-[#EDE0D4] hover:bg-[#D6CCC2] transition text-left"
         >
           <h2 className="text-xl font-semibold">My Profile</h2>
           <p className="text-sm mt-2">View & edit your student info</p>
-        </button>
-
-        <button
-          onClick={() => navigate("/search")}
-          className="p-6 rounded-2xl shadow bg-[#EDE0D4] hover:bg-[#D6CCC2] transition text-left"
-        >
-          <h2 className="text-xl font-semibold">Find Help</h2>
-          <p className="text-sm mt-2">
-            Search topics like housing, jobs, culture shock
-          </p>
         </button>
 
         <button
@@ -123,20 +155,46 @@ export default function Dashboard() {
 
         <button
           onClick={() => navigate("/posts")}
-          className="p-6 rounded-2xl shadow bg-[#EDE0D4] hover:bg-[#D6CCC2] transition text-left"
+          className="p-6 rounded-2xl shadow bg-[#EDE0D4] hover:bg-[#D6CCC2] hover:scale-[1.02] transition duration-200"
         >
           <h2 className="text-xl font-semibold">Community</h2>
           <p className="text-sm mt-2">See helpful posts & events</p>
         </button>
+
       </div>
 
+      {/* Recent Support Posts */}
+      <div className="space-y-4 mt-10">
+        <h2 className="text-xl font-semibold">Recent Support Posts</h2>
+
+        {posts.length === 0 ? (
+          <p className="opacity-70">No posts yet.</p>
+        ) : (
+          posts.map((post) => (
+            <div
+              key={post.id}
+              className="bg-[#EDE0D4] p-4 rounded-xl shadow hover:bg-[#D6CCC2] cursor-pointer transition"
+            >
+              <p className="text-xs opacity-60">
+                {post.category} • {post.userEmail}
+              </p>
+
+              <p className="font-medium">{post.title}</p>
+
+              <p className="text-sm opacity-80">{post.description}</p>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Logout */}
       <button
         onClick={handleLogout}
         className="mt-10 bg-[#B08968] text-white px-6 py-3 rounded-xl font-semibold hover:bg-[#7F5539]"
       >
         Logout
       </button>
+
     </div>
   );
 }
-

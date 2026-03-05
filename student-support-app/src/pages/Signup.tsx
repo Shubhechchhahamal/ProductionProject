@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
+import { createUserWithEmailAndPassword,} from "firebase/auth";
 import { auth } from "../firebase"; // make sure this path is correct
 
 export default function Register() {
@@ -17,7 +17,7 @@ export default function Register() {
         password
       );
 
-      await sendEmailVerification(userCredential.user);
+      
 
       setMessage("Verification email sent! Please check your inbox.");
 

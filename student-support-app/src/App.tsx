@@ -7,7 +7,8 @@ import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./ProtectedRoute";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
-
+import CreateSupport from "./pages/CreateSupport";
+import Posts from "./pages/Posts";
 
 export default function App() {
   return (
@@ -16,6 +17,8 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Register />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/create" element={<CreateSupport />} />
+      <Route path="/posts" element={<Posts />} />
 
 
 

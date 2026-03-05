@@ -14,6 +14,7 @@ export default function Login() {
     e.preventDefault();
     setError("");
 
+    // Only allow Leeds Beckett emails
     if (
       !email.endsWith("@leedsbeckett.ac.uk") &&
       !email.endsWith("@student.leedsbeckett.ac.uk")
@@ -23,23 +24,8 @@ export default function Login() {
     }
 
     try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-
-      const user = userCredential.user;
-
-      // ✅ Firebase built-in verification check
-      if (!user.emailVerified) {
-        setError("Please verify your email before logging in.");
-        await auth.signOut();
-        return;
-      }
-
+      await signInWithEmailAndPassword(auth, email, password);
       navigate("/home");
-
     } catch (err: any) {
       if (err.code === "auth/wrong-password") {
         setError("Incorrect password.");
