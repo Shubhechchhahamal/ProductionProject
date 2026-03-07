@@ -9,6 +9,8 @@ import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
 import CreateSupport from "./pages/CreateSupport";
 import Posts from "./pages/Posts";
+import CreatePost from "./pages/CreatePost";
+import PostPage from "./pages/PostPage";
 
 export default function App() {
   return (
@@ -19,6 +21,11 @@ export default function App() {
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/create" element={<CreateSupport />} />
       <Route path="/posts" element={<Posts />} />
+      <Route path="/create-post" element={<CreatePost />} />
+      <Route path="/post/:id" element={<PostPage />} />
+      <Route path="/profile" element={<Profile />} />
+      <Route path="/user/:userId" element={<Profile />} />
+      <Route path="/profile/:uid" element={<Profile />} />
 
 
 

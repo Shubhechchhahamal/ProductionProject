@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
 import { auth, db } from "../firebase";
-import { doc, getDoc, collection, getDocs, orderBy, query, limit } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  collection,
+  getDocs,
+  orderBy,
+  query,
+  limit
+} from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { signOut } from "firebase/auth";
 
@@ -22,16 +30,24 @@ function getCountryCode(country: string) {
 }
 
 export default function Dashboard() {
+
   const navigate = useNavigate();
 
   const [name, setName] = useState("");
   const [country, setCountry] = useState("");
   const [languages, setLanguages] = useState<string[]>([]);
   const [posts, setPosts] = useState<any[]>([]);
+
+  const [userCount, setUserCount] = useState(0);
+  const [postCount, setPostCount] = useState(0);
+  const [countryCount, setCountryCount] = useState(0);
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+
     const loadData = async () => {
+
       const user = auth.currentUser;
 
       if (!user) {
@@ -40,27 +56,40 @@ export default function Dashboard() {
       }
 
       try {
-        // Load latest support posts
+
+        // Load latest posts
         const q = query(
-          collection(db, "supports"),
+          collection(db, "posts"),
           orderBy("createdAt", "desc"),
           limit(3)
         );
 
         const postSnapshot = await getDocs(q);
 
-        const postList = postSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+const postList = await Promise.all(
+  postSnapshot.docs.map(async (docSnap) => {
+
+    const data = docSnap.data() as any;
+
+    const repliesRef = collection(db, "posts", docSnap.id, "replies");
+    const repliesSnapshot = await getDocs(repliesRef);
+
+    return {
+  id: docSnap.id,
+  ...data,
+  commentCount: repliesSnapshot.size
+};
+  })
+);
 
         setPosts(postList);
 
         // Load user profile
-        const docRef = doc(db, "users", user.uid);
-        const userSnapshot = await getDoc(docRef);
+        const userRef = doc(db, "users", user.uid);
+        const userSnapshot = await getDoc(userRef);
 
         if (userSnapshot.exists()) {
+
           const data: any = userSnapshot.data();
 
           setName(data.name || "");
@@ -72,6 +101,25 @@ export default function Dashboard() {
               : data.languages?.split(",") || []
           );
         }
+
+        // Load statistics
+        const usersSnapshot = await getDocs(collection(db, "users"));
+        const postsSnapshot = await getDocs(collection(db, "posts"));
+
+        setUserCount(usersSnapshot.size);
+        setPostCount(postsSnapshot.size);
+
+        const countries = new Set();
+
+        usersSnapshot.forEach((doc) => {
+          const data: any = doc.data();
+          if (data.country) {
+            countries.add(data.country);
+          }
+        });
+
+        setCountryCount(countries.size);
+
       } catch (error) {
         console.error("Error loading dashboard:", error);
       }
@@ -80,6 +128,7 @@ export default function Dashboard() {
     };
 
     loadData();
+
   }, []);
 
   const handleLogout = async () => {
@@ -96,6 +145,7 @@ export default function Dashboard() {
   }
 
   return (
+
     <div className="min-h-screen bg-[#F8F3EF] text-[#7F5539] p-6">
 
       <h1 className="text-3xl font-bold mb-2">
@@ -104,21 +154,24 @@ export default function Dashboard() {
 
       {/* Quick Stats */}
       <div className="flex flex-wrap gap-4 mb-8 mt-4">
+
         <div className="bg-[#EDE0D4] px-4 py-2 rounded-lg shadow text-sm">
-          👥 20 students joined
+          👥 {userCount} students joined
         </div>
 
         <div className="bg-[#EDE0D4] px-4 py-2 rounded-lg shadow text-sm">
-          💬 12 support posts
+          💬 {postCount} support posts
         </div>
 
         <div className="bg-[#EDE0D4] px-4 py-2 rounded-lg shadow text-sm">
-          🌍 8 countries represented
+          🌍 {countryCount} countries represented
         </div>
+
       </div>
 
       {/* Country + Languages */}
       <div className="flex items-center gap-3 mb-6">
+
         {country && (
           <img
             src={`https://flagcdn.com/${getCountryCode(country)}.svg`}
@@ -132,6 +185,7 @@ export default function Dashboard() {
             • {languages.join(", ")}
           </span>
         )}
+
       </div>
 
       {/* Dashboard Cards */}
@@ -163,8 +217,9 @@ export default function Dashboard() {
 
       </div>
 
-      {/* Recent Support Posts */}
+      {/* Recent Posts */}
       <div className="space-y-4 mt-10">
+
         <h2 className="text-xl font-semibold">Recent Support Posts</h2>
 
         {posts.length === 0 ? (
@@ -173,18 +228,43 @@ export default function Dashboard() {
           posts.map((post) => (
             <div
               key={post.id}
+              onClick={() => navigate(`/post/${post.id}`)}
               className="bg-[#EDE0D4] p-4 rounded-xl shadow hover:bg-[#D6CCC2] cursor-pointer transition"
             >
+              <p
+              onClick={(e) => {
+               e.stopPropagation();
+               navigate(`/profile/${post.userId}`);
+             }}
+              className="text-sm font-semibold hover:underline cursor-pointer"
+              >
+              {post.userName}
+              </p>
+
               <p className="text-xs opacity-60">
-                {post.category} • {post.userEmail}
+                {post.category}
               </p>
 
               <p className="font-medium">{post.title}</p>
 
-              <p className="text-sm opacity-80">{post.description}</p>
+              <p className="text-sm opacity-80">
+                {post.message}
+              </p>
+               
+               <p className="text-xs opacity-70 mt-2">
+                💬 {post.commentCount || 0} comments
+               </p>
+
+              {post.createdAt && (
+                <p className="text-xs opacity-50 mt-1">
+                  {post.createdAt.toDate().toLocaleDateString()}
+                </p>
+              )}
+
             </div>
           ))
         )}
+
       </div>
 
       {/* Logout */}
@@ -196,5 +276,6 @@ export default function Dashboard() {
       </button>
 
     </div>
+
   );
 }
