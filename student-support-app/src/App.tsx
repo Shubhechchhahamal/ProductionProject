@@ -1,36 +1,44 @@
 import { Routes, Route } from "react-router-dom";
+
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ResetPassword from "./pages/ResetPassword";
+
 import Dashboard from "./pages/Dashboard";
-import ProtectedRoute from "./ProtectedRoute";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
+
 import CreateSupport from "./pages/CreateSupport";
 import Posts from "./pages/Posts";
 import CreatePost from "./pages/CreatePost";
 import PostPage from "./pages/PostPage";
 
+import Inbox from "./pages/Inbox";
+import Chat from "./pages/Chat";
+
+import ProtectedRoute from "./ProtectedRoute";
+
 export default function App() {
   return (
     <Routes>
+
+      {/* Public Pages */}
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Register />} />
       <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/create" element={<CreateSupport />} />
-      <Route path="/posts" element={<Posts />} />
-      <Route path="/create-post" element={<CreatePost />} />
-      <Route path="/post/:id" element={<PostPage />} />
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/user/:userId" element={<Profile />} />
-      <Route path="/profile/:uid" element={<Profile />} />
 
+      {/* Protected Pages */}
+      <Route
+        path="/home"
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
 
-
-
-      {/* Profile Page */}
       <Route
         path="/profile"
         element={
@@ -40,7 +48,15 @@ export default function App() {
         }
       />
 
-      {/* Edit Profile Page */}
+      <Route
+        path="/profile/:uid"
+        element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        }
+      />
+
       <Route
         path="/edit-profile"
         element={
@@ -50,15 +66,60 @@ export default function App() {
         }
       />
 
-      {/* Dashboard Page */}
       <Route
-        path="/home"
+        path="/create"
         element={
           <ProtectedRoute>
-            <Dashboard />
+            <CreateSupport />
           </ProtectedRoute>
         }
       />
+
+      <Route
+        path="/posts"
+        element={
+          <ProtectedRoute>
+            <Posts />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/create-post"
+        element={
+          <ProtectedRoute>
+            <CreatePost />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/post/:id"
+        element={
+          <ProtectedRoute>
+            <PostPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/inbox"
+        element={
+          <ProtectedRoute>
+            <Inbox />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/chat/:chatId"
+        element={
+          <ProtectedRoute>
+            <Chat />
+          </ProtectedRoute>
+        }
+      />
+
     </Routes>
   );
 }

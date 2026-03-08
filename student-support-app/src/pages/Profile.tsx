@@ -1,12 +1,21 @@
 import { useEffect, useState } from "react";
 import { db, auth } from "../firebase";
-import { doc, getDoc } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  collection,
+  addDoc,
+  serverTimestamp,
+  query,
+  where,
+  getDocs
+} from "firebase/firestore";
 import { useNavigate, useParams } from "react-router-dom";
 
 export default function Profile() {
 
   const navigate = useNavigate();
-  const { userId } = useParams();
+  const { uid } = useParams();
 
   const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -17,26 +26,24 @@ export default function Profile() {
 
       try {
 
-        let uid = userId;
+        let profileUid = uid;
+        const currentUser = auth.currentUser;
 
-        // If viewing own profile
-        if (!uid) {
-
-          const currentUser = auth.currentUser;
+        if (!profileUid) {
 
           if (!currentUser) {
             setLoading(false);
             return;
           }
 
-          uid = currentUser.uid;
+          profileUid = currentUser.uid;
         }
 
-        const ref = doc(db, "users", uid);
+        const ref = doc(db, "users", profileUid);
         const snap = await getDoc(ref);
 
         if (snap.exists()) {
-          setUserData(snap.data());
+          setUserData({ uid: profileUid, ...snap.data() });
         }
 
       } catch (error) {
@@ -44,34 +51,69 @@ export default function Profile() {
       }
 
       setLoading(false);
-
     };
 
     loadUser();
 
-  }, [userId]);
+  }, [uid]);
+
+
+
+  const startChat = async () => {
+
+    const currentUser = auth.currentUser;
+    if (!currentUser || !userData) return;
+
+    try {
+
+      const chatsRef = collection(db, "chats");
+
+      const q = query(
+        chatsRef,
+        where("participants", "array-contains", currentUser.uid)
+      );
+
+      const snapshot = await getDocs(q);
+
+      for (const docSnap of snapshot.docs) {
+
+        const data: any = docSnap.data();
+
+        if (data.participants.includes(userData.uid)) {
+          navigate(`/chat/${docSnap.id}`);
+          return;
+        }
+      }
+
+      const chat = await addDoc(chatsRef, {
+        participants: [currentUser.uid, userData.uid],
+        createdAt: serverTimestamp()
+      });
+
+      navigate(`/chat/${chat.id}`);
+
+    } catch (error) {
+      console.error("Error starting chat:", error);
+    }
+
+  };
+
+
 
   if (loading) {
-    return (
-      <div className="p-10 text-center">
-        Loading profile...
-      </div>
-    );
+    return <div className="p-10 text-center">Loading profile...</div>;
   }
 
   if (!userData) {
-    return (
-      <div className="p-10 text-center">
-        No user info found
-      </div>
-    );
+    return <div className="p-10 text-center">No user info found</div>;
   }
+
+  const currentUser = auth.currentUser;
 
   return (
 
     <div className="min-h-screen bg-[#F8F3EF] p-6 text-[#7F5539]">
 
-      {/* Back Button */}
       <button
         className="mb-6 underline"
         onClick={() => navigate(-1)}
@@ -79,7 +121,6 @@ export default function Profile() {
         ← Back
       </button>
 
-      {/* Profile Card */}
       <div className="bg-white max-w-xl mx-auto p-8 rounded-3xl shadow text-center">
 
         <h1 className="text-2xl font-bold">
@@ -119,17 +160,27 @@ export default function Profile() {
           </div>
         )}
 
-        {/* Edit Button */}
-        <button
-          onClick={() => navigate("/edit-profile")}
-          className="mt-6 bg-[#B08968] text-white px-4 py-2 rounded-lg hover:bg-[#7F5539]"
-        >
-          Edit Profile
-        </button>
+        {currentUser?.uid === userData.uid && (
+          <button
+            onClick={() => navigate("/edit-profile")}
+            className="mt-6 bg-[#B08968] text-white px-4 py-2 rounded-lg hover:bg-[#7F5539]"
+          >
+            Edit Profile
+          </button>
+        )}
+
+        {currentUser?.uid !== userData.uid && (
+          <button
+            onClick={startChat}
+            className="mt-6 ml-3 bg-[#7F5539] text-white px-4 py-2 rounded-lg hover:bg-[#5E3B27]"
+          >
+            Message
+          </button>
+        )}
 
       </div>
 
     </div>
-  );
 
+  );
 }

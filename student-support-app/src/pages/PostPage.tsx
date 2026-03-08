@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { db, auth } from "../firebase";
 import {
@@ -151,7 +150,7 @@ export default function PostPage() {
 
        <p
   className="text-sm font-semibold mb-2 cursor-pointer hover:underline"
-  onClick={() => navigate(`/user/${post.userId}`)}
+  onClick={() => navigate(`/profile/${post.userId}`)}
 >
      {post.userName}
      </p>
@@ -186,7 +185,7 @@ export default function PostPage() {
                 >
                 <p
           className="text-xs text-gray-500 mb-1 cursor-pointer hover:underline"
-          onClick={() => navigate(`/user/${reply.userId}`)}
+          onClick={() => navigate(`/profile/${reply.userId}`)}
 >
              {reply.userName}
               </p>     

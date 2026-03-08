@@ -12,7 +12,6 @@ import {
 import { useNavigate } from "react-router-dom";
 import { signOut } from "firebase/auth";
 
-// Convert country → ISO flag code
 function getCountryCode(country: string) {
   if (!country) return null;
 
@@ -46,51 +45,55 @@ export default function Dashboard() {
 
   useEffect(() => {
 
-    const loadData = async () => {
-
-      const user = auth.currentUser;
-
-      if (!user) {
-        setLoading(false);
-        return;
-      }
+    const loadDashboard = async () => {
 
       try {
 
-        // Load latest posts
-        const q = query(
+        const currentUser = auth.currentUser;
+        if (!currentUser) {
+          setLoading(false);
+          return;
+        }
+
+        /* Load latest posts */
+        const postsQuery = query(
           collection(db, "posts"),
           orderBy("createdAt", "desc"),
           limit(3)
         );
 
-        const postSnapshot = await getDocs(q);
+        const postsSnap = await getDocs(postsQuery);
 
-const postList = await Promise.all(
-  postSnapshot.docs.map(async (docSnap) => {
+        const postsData = await Promise.all(
+          postsSnap.docs.map(async (docSnap) => {
 
-    const data = docSnap.data() as any;
+            const data: any = docSnap.data();
 
-    const repliesRef = collection(db, "posts", docSnap.id, "replies");
-    const repliesSnapshot = await getDocs(repliesRef);
+            const repliesRef = collection(db, "posts", docSnap.id, "replies");
+            const repliesSnap = await getDocs(repliesRef);
 
-    return {
-  id: docSnap.id,
-  ...data,
-  commentCount: repliesSnapshot.size
-};
-  })
-);
+            return {
+              id: docSnap.id,
+              userId: data.userId || null,
+              userName: data.userName || "Unknown user",
+              category: data.category || "",
+              title: data.title || "",
+              message: data.message || "",
+              commentCount: repliesSnap.size
+            };
 
-        setPosts(postList);
+          })
+        );
 
-        // Load user profile
-        const userRef = doc(db, "users", user.uid);
-        const userSnapshot = await getDoc(userRef);
+        setPosts(postsData);
 
-        if (userSnapshot.exists()) {
+        /* Load logged-in user profile */
+        const userRef = doc(db, "users", currentUser.uid);
+        const userSnap = await getDoc(userRef);
 
-          const data: any = userSnapshot.data();
+        if (userSnap.exists()) {
+
+          const data: any = userSnap.data();
 
           setName(data.name || "");
           setCountry(data.country || "");
@@ -102,32 +105,31 @@ const postList = await Promise.all(
           );
         }
 
-        // Load statistics
-        const usersSnapshot = await getDocs(collection(db, "users"));
-        const postsSnapshot = await getDocs(collection(db, "posts"));
+        /* Load statistics */
+        const usersSnap = await getDocs(collection(db, "users"));
+        const postsCountSnap = await getDocs(collection(db, "posts"));
 
-        setUserCount(usersSnapshot.size);
-        setPostCount(postsSnapshot.size);
+        setUserCount(usersSnap.size);
+        setPostCount(postsCountSnap.size);
 
         const countries = new Set();
 
-        usersSnapshot.forEach((doc) => {
+        usersSnap.forEach((doc) => {
           const data: any = doc.data();
-          if (data.country) {
-            countries.add(data.country);
-          }
+          if (data.country) countries.add(data.country);
         });
 
         setCountryCount(countries.size);
 
       } catch (error) {
-        console.error("Error loading dashboard:", error);
+        console.error("Dashboard load error:", error);
       }
 
       setLoading(false);
+
     };
 
-    loadData();
+    loadDashboard();
 
   }, []);
 
@@ -152,7 +154,7 @@ const postList = await Promise.all(
         Welcome back, {name} 👋
       </h1>
 
-      {/* Quick Stats */}
+      {/* Stats */}
       <div className="flex flex-wrap gap-4 mb-8 mt-4">
 
         <div className="bg-[#EDE0D4] px-4 py-2 rounded-lg shadow text-sm">
@@ -169,7 +171,7 @@ const postList = await Promise.all(
 
       </div>
 
-      {/* Country + Languages */}
+      {/* Country */}
       <div className="flex items-center gap-3 mb-6">
 
         {country && (
@@ -193,15 +195,15 @@ const postList = await Promise.all(
 
         <button
           onClick={() => navigate("/profile")}
-          className="p-6 rounded-2xl shadow bg-[#EDE0D4] hover:bg-[#D6CCC2] transition text-left"
+          className="p-6 rounded-2xl shadow bg-[#EDE0D4] hover:bg-[#D6CCC2] text-left"
         >
           <h2 className="text-xl font-semibold">My Profile</h2>
           <p className="text-sm mt-2">View & edit your student info</p>
         </button>
 
         <button
-          onClick={() => navigate("/messages")}
-          className="p-6 rounded-2xl shadow bg-[#EDE0D4] hover:bg-[#D6CCC2] transition text-left"
+          onClick={() => navigate("/inbox")}
+          className="p-6 rounded-2xl shadow bg-[#EDE0D4] hover:bg-[#D6CCC2] text-left"
         >
           <h2 className="text-xl font-semibold">Messages</h2>
           <p className="text-sm mt-2">Talk privately with other students</p>
@@ -209,10 +211,10 @@ const postList = await Promise.all(
 
         <button
           onClick={() => navigate("/posts")}
-          className="p-6 rounded-2xl shadow bg-[#EDE0D4] hover:bg-[#D6CCC2] hover:scale-[1.02] transition duration-200"
+          className="p-6 rounded-2xl shadow bg-[#EDE0D4] hover:bg-[#D6CCC2]"
         >
           <h2 className="text-xl font-semibold">Community</h2>
-          <p className="text-sm mt-2">See helpful posts & events</p>
+          <p className="text-sm mt-2">See helpful posts</p>
         </button>
 
       </div>
@@ -223,59 +225,53 @@ const postList = await Promise.all(
         <h2 className="text-xl font-semibold">Recent Support Posts</h2>
 
         {posts.length === 0 ? (
-          <p className="opacity-70">No posts yet.</p>
+          <p>No posts yet.</p>
         ) : (
           posts.map((post) => (
+
             <div
               key={post.id}
               onClick={() => navigate(`/post/${post.id}`)}
-              className="bg-[#EDE0D4] p-4 rounded-xl shadow hover:bg-[#D6CCC2] cursor-pointer transition"
+              className="bg-[#EDE0D4] p-4 rounded-xl shadow hover:bg-[#D6CCC2] cursor-pointer"
             >
+
               <p
-              onClick={(e) => {
-               e.stopPropagation();
-               navigate(`/profile/${post.userId}`);
-             }}
-              className="text-sm font-semibold hover:underline cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+
+                  if (!post.userId) return;
+
+                  navigate(`/profile/${post.userId}`);
+                }}
+                className="text-sm font-semibold hover:underline cursor-pointer"
               >
-              {post.userName}
+                {post.userName}
               </p>
 
-              <p className="text-xs opacity-60">
-                {post.category}
-              </p>
+              <p className="text-xs opacity-60">{post.category}</p>
 
               <p className="font-medium">{post.title}</p>
 
-              <p className="text-sm opacity-80">
-                {post.message}
-              </p>
-               
-               <p className="text-xs opacity-70 mt-2">
-                💬 {post.commentCount || 0} comments
-               </p>
+              <p className="text-sm opacity-80">{post.message}</p>
 
-              {post.createdAt && (
-                <p className="text-xs opacity-50 mt-1">
-                  {post.createdAt.toDate().toLocaleDateString()}
-                </p>
-              )}
+              <p className="text-xs opacity-70 mt-2">
+                💬 {post.commentCount} comments
+              </p>
 
             </div>
+
           ))
         )}
 
       </div>
 
-      {/* Logout */}
       <button
         onClick={handleLogout}
-        className="mt-10 bg-[#B08968] text-white px-6 py-3 rounded-xl font-semibold hover:bg-[#7F5539]"
+        className="mt-10 bg-[#B08968] text-white px-6 py-3 rounded-xl"
       >
         Logout
       </button>
 
     </div>
-
   );
 }
