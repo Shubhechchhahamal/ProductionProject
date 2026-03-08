@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { useParams } from "react-router-dom";
 import { db, auth } from "../firebase";
 import {
   collection,
@@ -10,7 +11,6 @@ import {
   doc,
   getDoc
 } from "firebase/firestore";
-import { useParams } from "react-router-dom";
 
 export default function Chat() {
 
@@ -20,10 +20,13 @@ export default function Chat() {
   const [text, setText] = useState("");
   const [otherUserName, setOtherUserName] = useState("");
 
-  /* Load the other user's name */
+  const bottomRef = useRef<HTMLDivElement | null>(null);
+
+
+  // Load the other user's name
   useEffect(() => {
 
-    const loadUserName = async () => {
+    const loadUser = async () => {
 
       if (!chatId) return;
 
@@ -49,17 +52,18 @@ export default function Chat() {
       const userSnap = await getDoc(userRef);
 
       if (userSnap.exists()) {
-        const userData: any = userSnap.data();
-        setOtherUserName(userData.name || "User");
+        const data: any = userSnap.data();
+        setOtherUserName(data.name || "User");
       }
 
     };
 
-    loadUserName();
+    loadUser();
 
   }, [chatId]);
 
-  /* Load messages in realtime */
+
+  // Listen to messages in realtime
   useEffect(() => {
 
     if (!chatId) return;
@@ -71,13 +75,13 @@ export default function Chat() {
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
 
-      const msgs: any[] = [];
+      const list: any[] = [];
 
       snapshot.forEach((doc) => {
-        msgs.push({ id: doc.id, ...doc.data() });
+        list.push({ id: doc.id, ...doc.data() });
       });
 
-      setMessages(msgs);
+      setMessages(list);
 
     });
 
@@ -85,6 +89,18 @@ export default function Chat() {
 
   }, [chatId]);
 
+
+  // Scroll to newest message
+  useEffect(() => {
+
+    if (bottomRef.current) {
+      bottomRef.current.scrollIntoView();
+    }
+
+  }, [messages]);
+
+
+  // Send message
   const sendMessage = async () => {
 
     const user = auth.currentUser;
@@ -92,7 +108,7 @@ export default function Chat() {
     if (!user || !text.trim() || !chatId) return;
 
     await addDoc(collection(db, "chats", chatId, "messages"), {
-      text,
+      text: text,
       senderId: user.uid,
       timestamp: serverTimestamp()
     });
@@ -101,17 +117,19 @@ export default function Chat() {
 
   };
 
+
   return (
 
-    <div className="min-h-screen bg-[#F8F3EF] p-6">
+    <div className="h-screen bg-[#F8F3EF] p-6 flex flex-col">
 
-      {/* USER NAME */}
-      <h2 className="text-xl font-bold mb-6 text-[#7F5539]">
+      {/* Header */}
+      <h2 className="text-xl font-bold mb-4 text-[#7F5539]">
         {otherUserName || "Chat"}
       </h2>
 
-      {/* MESSAGES */}
-      <div className="space-y-2 mb-6">
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto space-y-2 mb-4">
 
         {messages.map((msg) => {
 
@@ -134,9 +152,12 @@ export default function Chat() {
 
         })}
 
+        <div ref={bottomRef}></div>
+
       </div>
 
-      {/* INPUT */}
+
+      {/* Message Input */}
       <div className="flex gap-2">
 
         <input

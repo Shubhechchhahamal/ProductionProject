@@ -6,7 +6,9 @@ import {
   where,
   getDocs,
   doc,
-  getDoc
+  getDoc,
+  orderBy,
+  limit
 } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 
@@ -48,12 +50,49 @@ export default function Inbox() {
           name = userSnap.data().name;
         }
 
+        let lastMessage = "Start conversation";
+        let time = "";
+        let timestampValue = 0;
+
+        const msgQuery = query(
+          collection(db, "chats", chatDoc.id, "messages"),
+          orderBy("timestamp", "desc"),
+          limit(1)
+        );
+
+        const msgSnap = await getDocs(msgQuery);
+
+        msgSnap.forEach((m) => {
+          const data = m.data();
+
+          lastMessage = data.text;
+
+          if (data.timestamp) {
+
+            timestampValue = data.timestamp.seconds;
+
+            time = new Date(
+              data.timestamp.seconds * 1000
+            ).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit"
+            });
+
+          }
+        });
+
         chatList.push({
           id: chatDoc.id,
-          name
+          name,
+          lastMessage,
+          time,
+          timestamp: timestampValue
         });
 
       }
+
+      // Sort chats by newest message
+      chatList.sort((a, b) => b.timestamp - a.timestamp);
 
       setChats(chatList);
 
@@ -83,12 +122,20 @@ export default function Inbox() {
           className="bg-white p-4 rounded-xl shadow mb-3 cursor-pointer hover:bg-[#EDE0D4]"
         >
 
-          <p className="font-semibold">
-            {chat.name}
-          </p>
+          <div className="flex justify-between items-center">
+
+            <p className="font-semibold">
+              {chat.name}
+            </p>
+
+            <span className="text-xs opacity-60">
+              {chat.time}
+            </span>
+
+          </div>
 
           <p className="text-sm opacity-60">
-            Tap to open conversation
+            {chat.lastMessage}
           </p>
 
         </div>
