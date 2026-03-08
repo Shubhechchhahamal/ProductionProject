@@ -18,10 +18,7 @@ export default function Dashboard() {
 
   const [name, setName] = useState("");
   const [posts, setPosts] = useState<any[]>([]);
-
   const [userCount, setUserCount] = useState(0);
-  const [postCount, setPostCount] = useState(0);
-  const [countryCount, setCountryCount] = useState(0);
 
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -54,13 +51,11 @@ export default function Dashboard() {
         const userSnap = await getDoc(userRef);
 
         if (userSnap.exists()) {
-
           const data: any = userSnap.data();
           setName(data.name || "");
-
         }
 
-        /* LOAD POSTS */
+        /* LOAD RECENT POSTS */
 
         const postsQuery = query(
           collection(db, "posts"),
@@ -93,22 +88,10 @@ export default function Dashboard() {
 
         setPosts(postsData);
 
-        /* LOAD STATS */
+        /* LOAD USER COUNT */
 
         const usersSnap = await getDocs(collection(db, "users"));
-        const postsCountSnap = await getDocs(collection(db, "posts"));
-
         setUserCount(usersSnap.size);
-        setPostCount(postsCountSnap.size);
-
-        const countries = new Set();
-
-        usersSnap.forEach((doc) => {
-          const data: any = doc.data();
-          if (data.country) countries.add(data.country);
-        });
-
-        setCountryCount(countries.size);
 
       } catch (error) {
 
@@ -147,55 +130,43 @@ export default function Dashboard() {
 
     <div className="min-h-screen bg-[#F8F3EF] text-[#7F5539] p-6">
 
-      {/* Logo + Header */}
+      {/* HEADER */}
 
-{/* Header */}
+      <div className="flex justify-between items-start mb-10">
 
-<div className="flex justify-between items-start mb-8">
+        <div>
 
-  <div>
+          <h1 className="text-3xl font-bold">
+            Welcome, {firstName} 👋
+          </h1>
 
-    <h1 className="text-3xl font-bold">
-      Welcome, {firstName} 👋
-    </h1>
+          <p className="text-sm opacity-70 mt-1">
+            Connect with other international students and find support.
+          </p>
 
-    <p className="text-sm opacity-70 mt-1">
-      Connect with other international students and find support.
-    </p>
+        </div>
 
-  </div>
+        <img
+          src="/homeaway-logo.png"
+          alt="HomeAway"
+          className="h-28 object-contain opacity-90"
+        />
 
-  <img
-    src="/homeaway-logo.png"
-    alt="HomeAway"
-    className="h-28 object-contain opacity-90"
-  />
+      </div>
 
-</div>
       {/* ADMIN STATS */}
 
       {isAdmin && (
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 gap-6 mb-10">
 
-          <div className="bg-[#EDE0D4] p-6 rounded-2xl shadow text-center">
+          <div
+            onClick={() => navigate("/students")}
+            className="bg-[#EDE0D4] p-8 rounded-2xl shadow text-center cursor-pointer hover:bg-[#D6CCC2] hover:-translate-y-1 hover:shadow-lg transition"
+          >
 
             <p className="text-3xl font-bold">{userCount}</p>
             <p className="text-sm opacity-70">Students Joined</p>
-
-          </div>
-
-          <div className="bg-[#EDE0D4] p-6 rounded-2xl shadow text-center">
-
-            <p className="text-3xl font-bold">{postCount}</p>
-            <p className="text-sm opacity-70">Support Posts</p>
-
-          </div>
-
-          <div className="bg-[#EDE0D4] p-6 rounded-2xl shadow text-center">
-
-            <p className="text-3xl font-bold">{countryCount}</p>
-            <p className="text-sm opacity-70">Countries Represented</p>
 
           </div>
 
@@ -203,9 +174,9 @@ export default function Dashboard() {
 
       )}
 
-      {/* DASHBOARD CARDS */}
+      {/* DASHBOARD BUTTONS */}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
 
         <button
           onClick={() => navigate("/profile")}
@@ -241,7 +212,7 @@ export default function Dashboard() {
 
       {/* RECENT POSTS */}
 
-      <div className="space-y-4 mt-10">
+      <div className="space-y-4 mt-12">
 
         <h2 className="text-xl font-semibold">Recent Support Posts</h2>
 

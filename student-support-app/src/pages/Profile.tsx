@@ -26,24 +26,26 @@ export default function Profile() {
 
       try {
 
-        let profileUid = uid;
         const currentUser = auth.currentUser;
 
-        if (!profileUid) {
-
-          if (!currentUser) {
-            setLoading(false);
-            return;
-          }
-
-          profileUid = currentUser.uid;
+        if (!currentUser) {
+          setLoading(false);
+          return;
         }
+
+        // if uid exists use it, otherwise show current user profile
+        const profileUid = uid || currentUser.uid;
 
         const ref = doc(db, "users", profileUid);
         const snap = await getDoc(ref);
 
         if (snap.exists()) {
-          setUserData({ uid: profileUid, ...snap.data() });
+          setUserData({
+            uid: profileUid,
+            ...snap.data()
+          });
+        } else {
+          console.warn("User document not found in Firestore");
         }
 
       } catch (error) {
@@ -51,6 +53,7 @@ export default function Profile() {
       }
 
       setLoading(false);
+
     };
 
     loadUser();
@@ -83,6 +86,7 @@ export default function Profile() {
           navigate(`/chat/${docSnap.id}`);
           return;
         }
+
       }
 
       const chat = await addDoc(chatsRef, {
@@ -101,11 +105,19 @@ export default function Profile() {
 
 
   if (loading) {
-    return <div className="p-10 text-center">Loading profile...</div>;
+    return (
+      <div className="flex justify-center items-center h-screen text-[#7F5539]">
+        Loading profile...
+      </div>
+    );
   }
 
   if (!userData) {
-    return <div className="p-10 text-center">No user info found</div>;
+    return (
+      <div className="flex justify-center items-center h-screen text-[#7F5539]">
+        No user info found
+      </div>
+    );
   }
 
   const currentUser = auth.currentUser;
@@ -114,6 +126,8 @@ export default function Profile() {
 
     <div className="min-h-screen bg-[#F8F3EF] p-6 text-[#7F5539]">
 
+      {/* Back Button */}
+
       <button
         className="mb-6 underline"
         onClick={() => navigate(-1)}
@@ -121,14 +135,16 @@ export default function Profile() {
         ← Back
       </button>
 
+      {/* Profile Card */}
+
       <div className="bg-white max-w-xl mx-auto p-8 rounded-3xl shadow text-center">
 
         <h1 className="text-2xl font-bold">
-          {userData.name}
+          {userData.name || "Unnamed user"}
         </h1>
 
         <p className="mt-2">
-          🌍 {userData.country}
+          🌍 {userData.country || "Unknown"}
         </p>
 
         {userData.yearsInUK && (
@@ -160,6 +176,8 @@ export default function Profile() {
           </div>
         )}
 
+        {/* Edit profile button */}
+
         {currentUser?.uid === userData.uid && (
           <button
             onClick={() => navigate("/edit-profile")}
@@ -168,6 +186,8 @@ export default function Profile() {
             Edit Profile
           </button>
         )}
+
+        {/* Message button */}
 
         {currentUser?.uid !== userData.uid && (
           <button
@@ -183,4 +203,5 @@ export default function Profile() {
     </div>
 
   );
+
 }

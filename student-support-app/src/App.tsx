@@ -16,6 +16,7 @@ import PostPage from "./pages/PostPage";
 
 import Inbox from "./pages/Inbox";
 import Chat from "./pages/Chat";
+import Students from "./pages/Students";
 
 import ProtectedRoute from "./ProtectedRoute";
 
@@ -28,6 +29,7 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Register />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/students" element={<Students />} />
 
       {/* Protected Pages */}
       <Route
