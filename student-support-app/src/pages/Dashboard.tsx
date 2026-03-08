@@ -12,35 +12,18 @@ import {
 import { useNavigate } from "react-router-dom";
 import { signOut } from "firebase/auth";
 
-function getCountryCode(country: string) {
-  if (!country) return null;
-
-  const c = country.toLowerCase();
-
-  if (c.startsWith("nep")) return "np";
-  if (c.startsWith("uni") || c.includes("kingdom")) return "gb";
-  if (c.startsWith("ind")) return "in";
-  if (c.startsWith("chi")) return "cn";
-  if (c.startsWith("pak")) return "pk";
-  if (c.startsWith("ban")) return "bd";
-  if (c.startsWith("sri")) return "lk";
-
-  return country.slice(0, 2).toLowerCase();
-}
-
 export default function Dashboard() {
 
   const navigate = useNavigate();
 
   const [name, setName] = useState("");
-  const [country, setCountry] = useState("");
-  const [languages, setLanguages] = useState<string[]>([]);
   const [posts, setPosts] = useState<any[]>([]);
 
   const [userCount, setUserCount] = useState(0);
   const [postCount, setPostCount] = useState(0);
   const [countryCount, setCountryCount] = useState(0);
 
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -50,12 +33,35 @@ export default function Dashboard() {
       try {
 
         const currentUser = auth.currentUser;
+
         if (!currentUser) {
           setLoading(false);
           return;
         }
 
-        /* Load latest posts */
+        /* ADMIN CHECK */
+
+        if (
+          currentUser.email?.toLowerCase() ===
+          "s.hamal2465@student.leedsbeckett.ac.uk"
+        ) {
+          setIsAdmin(true);
+        }
+
+        /* LOAD USER PROFILE */
+
+        const userRef = doc(db, "users", currentUser.uid);
+        const userSnap = await getDoc(userRef);
+
+        if (userSnap.exists()) {
+
+          const data: any = userSnap.data();
+          setName(data.name || "");
+
+        }
+
+        /* LOAD POSTS */
+
         const postsQuery = query(
           collection(db, "posts"),
           orderBy("createdAt", "desc"),
@@ -87,25 +93,8 @@ export default function Dashboard() {
 
         setPosts(postsData);
 
-        /* Load logged-in user profile */
-        const userRef = doc(db, "users", currentUser.uid);
-        const userSnap = await getDoc(userRef);
+        /* LOAD STATS */
 
-        if (userSnap.exists()) {
-
-          const data: any = userSnap.data();
-
-          setName(data.name || "");
-          setCountry(data.country || "");
-
-          setLanguages(
-            Array.isArray(data.languages)
-              ? data.languages
-              : data.languages?.split(",") || []
-          );
-        }
-
-        /* Load statistics */
         const usersSnap = await getDocs(collection(db, "users"));
         const postsCountSnap = await getDocs(collection(db, "posts"));
 
@@ -122,7 +111,9 @@ export default function Dashboard() {
         setCountryCount(countries.size);
 
       } catch (error) {
+
         console.error("Dashboard load error:", error);
+
       }
 
       setLoading(false);
@@ -134,125 +125,168 @@ export default function Dashboard() {
   }, []);
 
   const handleLogout = async () => {
+
     await signOut(auth);
     navigate("/");
+
   };
 
   if (loading) {
+
     return (
       <div className="flex justify-center items-center h-screen text-[#7F5539]">
         Loading...
       </div>
     );
+
   }
+
+  const firstName = name ? name.split(" ")[0] : "";
 
   return (
 
     <div className="min-h-screen bg-[#F8F3EF] text-[#7F5539] p-6">
 
-      <h1 className="text-3xl font-bold mb-2">
-        Welcome back, {name} 👋
-      </h1>
+      {/* Logo + Header */}
 
-      {/* Stats */}
-      <div className="flex flex-wrap gap-4 mb-8 mt-4">
+{/* Header */}
 
-        <div className="bg-[#EDE0D4] px-4 py-2 rounded-lg shadow text-sm">
-          👥 {userCount} students joined
+<div className="flex justify-between items-start mb-8">
+
+  <div>
+
+    <h1 className="text-3xl font-bold">
+      Welcome, {firstName} 👋
+    </h1>
+
+    <p className="text-sm opacity-70 mt-1">
+      Connect with other international students and find support.
+    </p>
+
+  </div>
+
+  <img
+    src="/homeaway-logo.png"
+    alt="HomeAway"
+    className="h-28 object-contain opacity-90"
+  />
+
+</div>
+      {/* ADMIN STATS */}
+
+      {isAdmin && (
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+
+          <div className="bg-[#EDE0D4] p-6 rounded-2xl shadow text-center">
+
+            <p className="text-3xl font-bold">{userCount}</p>
+            <p className="text-sm opacity-70">Students Joined</p>
+
+          </div>
+
+          <div className="bg-[#EDE0D4] p-6 rounded-2xl shadow text-center">
+
+            <p className="text-3xl font-bold">{postCount}</p>
+            <p className="text-sm opacity-70">Support Posts</p>
+
+          </div>
+
+          <div className="bg-[#EDE0D4] p-6 rounded-2xl shadow text-center">
+
+            <p className="text-3xl font-bold">{countryCount}</p>
+            <p className="text-sm opacity-70">Countries Represented</p>
+
+          </div>
+
         </div>
 
-        <div className="bg-[#EDE0D4] px-4 py-2 rounded-lg shadow text-sm">
-          💬 {postCount} support posts
-        </div>
+      )}
 
-        <div className="bg-[#EDE0D4] px-4 py-2 rounded-lg shadow text-sm">
-          🌍 {countryCount} countries represented
-        </div>
+      {/* DASHBOARD CARDS */}
 
-      </div>
-
-      {/* Country */}
-      <div className="flex items-center gap-3 mb-6">
-
-        {country && (
-          <img
-            src={`https://flagcdn.com/${getCountryCode(country)}.svg`}
-            alt="flag"
-            className="w-6 h-4 rounded-sm shadow"
-          />
-        )}
-
-        {languages.length > 0 && (
-          <span className="opacity-70 text-sm">
-            • {languages.join(", ")}
-          </span>
-        )}
-
-      </div>
-
-      {/* Dashboard Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
         <button
           onClick={() => navigate("/profile")}
-          className="p-6 rounded-2xl shadow bg-[#EDE0D4] hover:bg-[#D6CCC2] text-left"
+          className="p-6 rounded-2xl shadow bg-[#EDE0D4] hover:bg-[#D6CCC2] hover:shadow-lg hover:-translate-y-1 text-left transition"
         >
-          <h2 className="text-xl font-semibold">My Profile</h2>
+
+          <h2 className="text-xl font-semibold">👤 My Profile</h2>
           <p className="text-sm mt-2">View & edit your student info</p>
+
         </button>
 
         <button
           onClick={() => navigate("/inbox")}
-          className="p-6 rounded-2xl shadow bg-[#EDE0D4] hover:bg-[#D6CCC2] text-left"
+          className="p-6 rounded-2xl shadow bg-[#EDE0D4] hover:bg-[#D6CCC2] hover:shadow-lg hover:-translate-y-1 text-left transition"
         >
-          <h2 className="text-xl font-semibold">Messages</h2>
+
+          <h2 className="text-xl font-semibold">💬 Messages</h2>
           <p className="text-sm mt-2">Talk privately with other students</p>
+
         </button>
 
         <button
           onClick={() => navigate("/posts")}
-          className="p-6 rounded-2xl shadow bg-[#EDE0D4] hover:bg-[#D6CCC2]"
+          className="p-6 rounded-2xl shadow bg-[#EDE0D4] hover:bg-[#D6CCC2] hover:shadow-lg hover:-translate-y-1 text-left transition"
         >
-          <h2 className="text-xl font-semibold">Community</h2>
+
+          <h2 className="text-xl font-semibold">🌍 Community</h2>
           <p className="text-sm mt-2">See helpful posts</p>
+
         </button>
 
       </div>
 
-      {/* Recent Posts */}
+      {/* RECENT POSTS */}
+
       <div className="space-y-4 mt-10">
 
         <h2 className="text-xl font-semibold">Recent Support Posts</h2>
 
         {posts.length === 0 ? (
+
           <p>No posts yet.</p>
+
         ) : (
+
           posts.map((post) => (
 
             <div
               key={post.id}
               onClick={() => navigate(`/post/${post.id}`)}
-              className="bg-[#EDE0D4] p-4 rounded-xl shadow hover:bg-[#D6CCC2] cursor-pointer"
+              className="bg-[#EDE0D4] p-5 rounded-2xl shadow hover:bg-[#D6CCC2] hover:shadow-lg cursor-pointer transition"
             >
 
               <p
                 onClick={(e) => {
+
                   e.stopPropagation();
 
                   if (!post.userId) return;
 
                   navigate(`/profile/${post.userId}`);
+
                 }}
                 className="text-sm font-semibold hover:underline cursor-pointer"
               >
+
                 {post.userName}
+
               </p>
 
-              <p className="text-xs opacity-60">{post.category}</p>
+              <p className="text-xs opacity-60">
+                {post.category}
+              </p>
 
-              <p className="font-medium">{post.title}</p>
+              <p className="font-medium">
+                {post.title}
+              </p>
 
-              <p className="text-sm opacity-80">{post.message}</p>
+              <p className="text-sm opacity-80">
+                {post.message}
+              </p>
 
               <p className="text-xs opacity-70 mt-2">
                 💬 {post.commentCount} comments
@@ -261,17 +295,24 @@ export default function Dashboard() {
             </div>
 
           ))
+
         )}
 
       </div>
 
+      {/* LOGOUT */}
+
       <button
         onClick={handleLogout}
-        className="mt-10 bg-[#B08968] text-white px-6 py-3 rounded-xl"
+        className="mt-10 bg-[#B08968] hover:bg-[#9C6644] text-white px-6 py-3 rounded-xl transition"
       >
+
         Logout
+
       </button>
 
     </div>
+
   );
+
 }

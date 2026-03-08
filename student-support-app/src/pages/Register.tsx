@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 import { auth, db } from "../firebase";
-import { setDoc, doc } from "firebase/firestore";
+import { setDoc, doc, getDoc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 
 export default function Register() {
@@ -18,7 +18,6 @@ export default function Register() {
     setError("");
     setSuccess("");
 
-    // Allow only university emails
     if (
       !email.endsWith("@leedsbeckett.ac.uk") &&
       !email.endsWith("@student.leedsbeckett.ac.uk")
@@ -28,7 +27,6 @@ export default function Register() {
     }
 
     try {
-      // 1️⃣ Create Firebase Auth user
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
@@ -37,24 +35,27 @@ export default function Register() {
 
       const user = userCredential.user;
 
-      // 2️⃣ Send Firebase verification email (LINK)
       await sendEmailVerification(user);
 
-      // 3️⃣ Save user profile in Firestore
-      await setDoc(doc(db, "users", user.uid), {
-        name,
-        email,
-        createdAt: new Date().toISOString(),
-      });
+      const userRef = doc(db, "users", user.uid);
+      const existingUser = await getDoc(userRef);
+
+      if (!existingUser.exists()) {
+        await setDoc(userRef, {
+          name,
+          email,
+          createdAt: new Date().toISOString(),
+        });
+      }
 
       setSuccess("Verification email sent! Please check your inbox.");
 
-      // Redirect to login after short delay
       setTimeout(() => {
         navigate("/login");
       }, 2000);
 
     } catch (err: any) {
+
       if (err.code === "auth/email-already-in-use") {
         setError("Email already registered.");
       } else if (err.code === "auth/weak-password") {
@@ -62,6 +63,7 @@ export default function Register() {
       } else {
         setError("Registration failed. Try again.");
       }
+
     }
   };
 
@@ -71,6 +73,7 @@ export default function Register() {
         onSubmit={handleRegister}
         className="bg-white p-8 rounded-2xl shadow-md w-full max-w-md space-y-4"
       >
+
         <h2 className="text-center text-xl font-semibold text-[#7F5539]">
           Create Account
         </h2>
@@ -116,6 +119,7 @@ export default function Register() {
         >
           Register
         </button>
+
       </form>
     </div>
   );

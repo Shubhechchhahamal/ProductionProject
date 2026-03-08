@@ -4,6 +4,7 @@ import { auth } from "../firebase";
 import { useNavigate } from "react-router-dom";
 
 export default function Login() {
+
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
@@ -14,7 +15,6 @@ export default function Login() {
     e.preventDefault();
     setError("");
 
-    // Only allow Leeds Beckett emails
     if (
       !email.endsWith("@leedsbeckett.ac.uk") &&
       !email.endsWith("@student.leedsbeckett.ac.uk")
@@ -24,9 +24,13 @@ export default function Login() {
     }
 
     try {
+
       await signInWithEmailAndPassword(auth, email, password);
+
       navigate("/home");
+
     } catch (err: any) {
+
       if (err.code === "auth/wrong-password") {
         setError("Incorrect password.");
       } else if (err.code === "auth/user-not-found") {
@@ -34,15 +38,18 @@ export default function Login() {
       } else {
         setError("Login failed. Try again.");
       }
+
     }
   };
 
   return (
     <div className="w-full flex justify-center items-center p-6">
+
       <form
         onSubmit={handleLogin}
         className="bg-white p-8 rounded-2xl shadow-md w-full max-w-md space-y-4"
       >
+
         <h2 className="text-center text-xl font-semibold text-[#7F5539]">
           Login
         </h2>
@@ -85,6 +92,7 @@ export default function Login() {
             Register
           </span>
         </p>
+
       </form>
     </div>
   );
