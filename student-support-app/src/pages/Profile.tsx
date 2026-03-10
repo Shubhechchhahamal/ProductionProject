@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { db, auth } from "../firebase";
+import { setDoc } from "firebase/firestore";
 import {
   doc,
   getDoc,
@@ -20,47 +21,61 @@ export default function Profile() {
   const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+   useEffect(() => {
 
-    const loadUser = async () => {
+  const unsubscribe = auth.onAuthStateChanged(async (user) => {
 
-      try {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
-        const currentUser = auth.currentUser;
+    try {
 
-        if (!currentUser) {
-          setLoading(false);
-          return;
-        }
+      const profileUid = uid || user.uid;
 
-        // if uid exists use it, otherwise show current user profile
-        const profileUid = uid || currentUser.uid;
+      const ref = doc(db, "users", profileUid);
+      const snap = await getDoc(ref);
 
-        const ref = doc(db, "users", profileUid);
-        const snap = await getDoc(ref);
+      if (snap.exists()) {
 
-        if (snap.exists()) {
-          setUserData({
-            uid: profileUid,
-            ...snap.data()
-          });
-        } else {
-          console.warn("User document not found in Firestore");
-        }
+        setUserData({
+          uid: profileUid,
+          ...snap.data()
+        });
 
-      } catch (error) {
-        console.error("Error loading profile:", error);
+      } else {
+
+        console.log("Creating missing profile document...");
+
+        await setDoc(ref, {
+          name: user.email || "User",
+          email: user.email,
+          createdAt: serverTimestamp()
+        });
+
+        const newSnap = await getDoc(ref);
+
+        setUserData({
+          uid: profileUid,
+          ...newSnap.data()
+        });
+
       }
 
-      setLoading(false);
+    } catch (error) {
 
-    };
+      console.error("Profile load error:", error);
 
-    loadUser();
+    }
 
-  }, [uid]);
+    setLoading(false);
 
+  });
 
+  return () => unsubscribe();
+
+}, [uid]);
 
   const startChat = async () => {
 

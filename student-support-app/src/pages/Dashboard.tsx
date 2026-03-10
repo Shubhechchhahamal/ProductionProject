@@ -176,7 +176,7 @@ export default function Dashboard() {
 
       {/* DASHBOARD BUTTONS */}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-6">
 
         <button
           onClick={() => navigate("/profile")}
@@ -205,6 +205,16 @@ export default function Dashboard() {
 
           <h2 className="text-xl font-semibold">🌍 Community</h2>
           <p className="text-sm mt-2">See helpful posts</p>
+
+        </button>
+
+        <button
+          onClick={() => navigate("/students")}
+          className="p-6 rounded-2xl shadow bg-[#EDE0D4] hover:bg-[#D6CCC2] hover:shadow-lg hover:-translate-y-1 text-left transition"
+        >
+
+          <h2 className="text-xl font-semibold">🎓 Students</h2>
+          <p className="text-sm mt-2">Find international students</p>
 
         </button>
 
