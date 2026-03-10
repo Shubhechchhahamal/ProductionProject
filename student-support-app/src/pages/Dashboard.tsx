@@ -154,25 +154,7 @@ export default function Dashboard() {
 
       </div>
 
-      {/* ADMIN STATS */}
-
-      {isAdmin && (
-
-        <div className="grid grid-cols-1 gap-6 mb-10">
-
-          <div
-            onClick={() => navigate("/students")}
-            className="bg-[#EDE0D4] p-8 rounded-2xl shadow text-center cursor-pointer hover:bg-[#D6CCC2] hover:-translate-y-1 hover:shadow-lg transition"
-          >
-
-            <p className="text-3xl font-bold">{userCount}</p>
-            <p className="text-sm opacity-70">Students Joined</p>
-
-          </div>
-
-        </div>
-
-      )}
+    
 
       {/* DASHBOARD BUTTONS */}
 

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { db, auth } from "../firebase";
+import { checkAIModeration } from "../utils/aiModeration";
 import {
   collection,
   addDoc,
@@ -22,7 +23,7 @@ export default function CreatePost() {
 
     e.preventDefault();
 
-    if (!title || !message) {
+    if (!title.trim() || !message.trim()) {
       alert("Please fill all fields");
       return;
     }
@@ -35,6 +36,16 @@ export default function CreatePost() {
 
       if (!user) {
         alert("You must be logged in to post");
+        setLoading(false);
+        return;
+      }
+
+      // 🔹 AI MODERATION CHECK
+      const safe = await checkAIModeration(title + " " + message);
+
+      if (!safe) {
+        alert("Your post contains harmful or abusive language.");
+        setLoading(false);
         return;
       }
 
@@ -42,8 +53,8 @@ export default function CreatePost() {
       const userData = userDoc.data();
 
       await addDoc(collection(db, "posts"), {
-        title,
-        message,
+        title: title.trim(),
+        message: message.trim(),
         category,
         createdAt: serverTimestamp(),
         userId: user.uid,
@@ -54,6 +65,7 @@ export default function CreatePost() {
 
     } catch (error) {
       console.error("Error creating post:", error);
+      alert("Something went wrong while creating the post.");
     }
 
     setLoading(false);

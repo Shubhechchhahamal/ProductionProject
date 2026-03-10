@@ -9,8 +9,6 @@ export default function Students() {
 
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // search state for filtering students
   const [search, setSearch] = useState("");
 
   useEffect(() => {
@@ -27,10 +25,10 @@ export default function Students() {
 
         list.push({
           id: doc.id,
-          name: data.name || "Unnamed user",
-          country: data.country || "Unknown",
-          languages: data.languages || "",
-          helpOffer: data.helpOffer || ""
+          name: (data.name || "Unnamed user").trim(),
+          country: (data.country || "Unknown").trim(),
+          languages: (data.languages || "").trim(),
+          helpOffer: (data.helpOffer || "").trim()
         });
 
       });
@@ -45,16 +43,16 @@ export default function Students() {
   }, []);
 
 
-  // filter students based on search input
+  // Filter students based on search input
   const filteredStudents = students.filter((student) => {
 
-    const query = search.toLowerCase();
+    const query = search.toLowerCase().trim();
 
     return (
-      student.name?.toLowerCase().includes(query) ||
-      student.country?.toLowerCase().includes(query) ||
-      student.languages?.toLowerCase().includes(query) ||
-      student.helpOffer?.toLowerCase().includes(query)
+      student.name?.toLowerCase().trim().includes(query) ||
+      student.country?.toLowerCase().trim().includes(query) ||
+      student.languages?.toLowerCase().trim().includes(query) ||
+      student.helpOffer?.toLowerCase().trim().includes(query)
     );
 
   });
@@ -73,10 +71,10 @@ export default function Students() {
     <div className="min-h-screen bg-[#F8F3EF] text-[#7F5539] p-6">
 
       <h1 className="text-3xl font-bold mb-6">
-        Students Joined ({students.length})
+        Students Joined ({filteredStudents.length})
       </h1>
 
-      {/* search bar */}
+      {/* Search bar */}
 
       <div className="mb-8">
 
@@ -113,12 +111,10 @@ export default function Students() {
 
         ))}
 
-        {/* show message if no students match search */}
-
         {filteredStudents.length === 0 && (
 
           <p className="text-center text-sm opacity-70 mt-6">
-            No students found.
+            No students match your search.
           </p>
 
         )}

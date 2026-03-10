@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { db, auth } from "../firebase";
+import { checkAIModeration } from "../utils/aiModeration";
 import {
   collection,
   addDoc,
@@ -22,8 +23,6 @@ export default function Chat() {
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
-
-  // Load the other user's name
   useEffect(() => {
 
     const loadUser = async () => {
@@ -62,8 +61,6 @@ export default function Chat() {
 
   }, [chatId]);
 
-
-  // Listen to messages in realtime
   useEffect(() => {
 
     if (!chatId) return;
@@ -89,8 +86,6 @@ export default function Chat() {
 
   }, [chatId]);
 
-
-  // Scroll to newest message
   useEffect(() => {
 
     if (bottomRef.current) {
@@ -99,13 +94,19 @@ export default function Chat() {
 
   }, [messages]);
 
-
-  // Send message
   const sendMessage = async () => {
 
     const user = auth.currentUser;
 
     if (!user || !text.trim() || !chatId) return;
+
+    // 🔹 AI moderation
+    const safe = await checkAIModeration(text);
+
+    if (!safe) {
+      alert("Your message contains harmful or abusive language.");
+      return;
+    }
 
     await addDoc(collection(db, "chats", chatId, "messages"), {
       text: text,
@@ -117,18 +118,14 @@ export default function Chat() {
 
   };
 
-
   return (
 
     <div className="h-screen bg-[#F8F3EF] p-6 flex flex-col">
 
-      {/* Header */}
       <h2 className="text-xl font-bold mb-4 text-[#7F5539]">
         {otherUserName || "Chat"}
       </h2>
 
-
-      {/* Messages */}
       <div className="flex-1 overflow-y-auto space-y-2 mb-4">
 
         {messages.map((msg) => {
@@ -156,8 +153,6 @@ export default function Chat() {
 
       </div>
 
-
-      {/* Message Input */}
       <div className="flex gap-2">
 
         <input

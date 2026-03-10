@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { db, auth } from "../firebase";
+import { checkAIModeration } from "../utils/aiModeration";
 import {
   doc,
   getDoc,
@@ -29,7 +30,6 @@ export default function PostPage() {
       if (!id) return;
 
       try {
-        // Load post
         const postRef = doc(db, "posts", id);
         const postSnap = await getDoc(postRef);
 
@@ -37,7 +37,6 @@ export default function PostPage() {
           setPost(postSnap.data());
         }
 
-        // Load replies
         const repliesQuery = query(
           collection(db, "posts", id, "replies"),
           orderBy("createdAt", "asc")
@@ -73,6 +72,14 @@ export default function PostPage() {
         return;
       }
 
+      // 🔹 AI moderation
+      const safe = await checkAIModeration(newReply);
+
+      if (!safe) {
+        alert("Your comment contains harmful or abusive language.");
+        return;
+      }
+
       const userRef = doc(db, "users", user.uid);
       const userSnap = await getDoc(userRef);
       const userData = userSnap.data();
@@ -86,7 +93,6 @@ export default function PostPage() {
 
       setNewReply("");
 
-      // Reload replies
       const repliesQuery = query(
         collection(db, "posts", id, "replies"),
         orderBy("createdAt", "asc")
@@ -129,7 +135,6 @@ export default function PostPage() {
 
       <div className="max-w-3xl mx-auto">
 
-        {/* POST */}
         <div className="bg-white rounded-xl shadow p-6 border">
 
           <div className="flex justify-between items-center mb-3">
@@ -148,16 +153,16 @@ export default function PostPage() {
             )}
           </div>
 
-       <p
-  className="text-sm font-semibold mb-2 cursor-pointer hover:underline"
-  onClick={() => navigate(`/profile/${post.userId}`)}
->
-     {post.userName}
-     </p>
+          <p
+            className="text-sm font-semibold mb-2 cursor-pointer hover:underline"
+            onClick={() => navigate(`/profile/${post.userId}`)}
+          >
+            {post.userName}
+          </p>
 
-     <h1 className="text-2xl font-semibold mb-3">
-     {post.title}
-       </h1> 
+          <h1 className="text-2xl font-semibold mb-3">
+            {post.title}
+          </h1>
 
           <p className="text-gray-700 leading-relaxed">
             {post.message}
@@ -165,7 +170,6 @@ export default function PostPage() {
 
         </div>
 
-        {/* REPLIES */}
         <div className="mt-8">
 
           <h2 className="text-lg font-semibold mb-4">
@@ -179,16 +183,15 @@ export default function PostPage() {
           ) : (
             <div className="space-y-3">
               {replies.map((reply) => (
-                <div
-                  key={reply.id}
-                  className="bg-white border rounded-lg p-4"
-                >
-                <p
-          className="text-xs text-gray-500 mb-1 cursor-pointer hover:underline"
-          onClick={() => navigate(`/profile/${reply.userId}`)}
->
-             {reply.userName}
-              </p>     
+                <div key={reply.id} className="bg-white border rounded-lg p-4">
+
+                  <p
+                    className="text-xs text-gray-500 mb-1 cursor-pointer hover:underline"
+                    onClick={() => navigate(`/profile/${reply.userId}`)}
+                  >
+                    {reply.userName}
+                  </p>
+
                   <p className="text-sm text-gray-700">
                     {reply.message}
                   </p>
@@ -198,7 +201,6 @@ export default function PostPage() {
             </div>
           )}
 
-          {/* Reply input */}
           <div className="mt-6 flex gap-2">
 
             <input
@@ -225,4 +227,3 @@ export default function PostPage() {
     </div>
   );
 }
-
