@@ -1,5 +1,3 @@
-console.log("ENV TEST:", import.meta.env);
-console.log("Perspective key:", import.meta.env.VITE_PERSPECTIVE_API_KEY);
 export async function checkAIModeration(text: string): Promise<boolean> {
 
   const API_KEY = import.meta.env.VITE_PERSPECTIVE_API_KEY;
@@ -25,7 +23,8 @@ export async function checkAIModeration(text: string): Promise<boolean> {
             TOXICITY: {},
             INSULT: {},
             THREAT: {}
-          }
+          },
+          doNotStore: true
         })
       }
     );
@@ -43,18 +42,16 @@ export async function checkAIModeration(text: string): Promise<boolean> {
 
     console.log("Moderation scores:", { toxicity, insult, threat });
 
-    // moderation thresholds
     if (toxicity > 0.75 || insult > 0.75 || threat > 0.6) {
-      return false; // block message
+      return false;
     }
 
-    return true; // allow message
+    return true;
 
   } catch (error) {
 
     console.error("Moderation API error:", error);
-
-    // if API fails, allow message so app doesn't break
     return true;
+
   }
 }
