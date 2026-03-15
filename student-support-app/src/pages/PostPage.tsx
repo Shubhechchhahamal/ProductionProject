@@ -90,12 +90,25 @@ export default function PostPage() {
       const userSnap = await getDoc(userRef);
       const userData = userSnap.data();
 
+      // Create reply
       await addDoc(collection(db, "posts", id, "replies"), {
         message: newReply,
         createdAt: serverTimestamp(),
         userId: user.uid,
         userName: userData?.name || "User",
       });
+
+      // Create notification for post owner
+      if (post?.userId && post.userId !== user.uid) {
+
+        await addDoc(collection(db, "notifications"), {
+          userId: post.userId,
+          message: `${userData?.name || "Someone"} replied to your post`,
+          postId: id,
+          createdAt: serverTimestamp()
+        });
+
+      }
 
       setNewReply("");
 
@@ -129,7 +142,6 @@ export default function PostPage() {
     try {
 
       await deleteDoc(doc(db, "posts", id));
-
       navigate("/posts");
 
     } catch (error) {
@@ -139,7 +151,6 @@ export default function PostPage() {
     }
   };
 
-  // NEW: delete reply
   const handleDeleteReply = async (replyId: string) => {
 
     if (!id) return;
@@ -297,5 +308,6 @@ export default function PostPage() {
       </div>
 
     </div>
+
   );
 }

@@ -35,7 +35,7 @@ export default function Chat() {
       const chatRef = doc(db, "chats", chatId);
       const chatSnap = await getDoc(chatRef);
 
-      if (!chatSnap.exists()) return;
+      if (!chatSnap.exists()) return; 
 
       const chatData:any = chatSnap.data();
 
@@ -105,11 +105,39 @@ export default function Chat() {
       return;
     }
 
+    // Send message
     await addDoc(collection(db,"chats",chatId,"messages"),{
       text,
       senderId:user.uid,
       timestamp:serverTimestamp()
     });
+
+    // Get chat information
+    const chatRef = doc(db,"chats",chatId);
+    const chatSnap = await getDoc(chatRef);
+
+    if(chatSnap.exists()){
+
+      const chatData:any = chatSnap.data();
+      const participants:string[] = chatData.participants || [];
+
+      const otherUserId = participants.find(
+        (uid)=> uid !== user.uid
+      );
+
+      if(otherUserId){
+
+        // Create notification
+        await addDoc(collection(db,"notifications"),{
+          userId: otherUserId,
+          message: "You received a new message",
+          chatId: chatId,
+          createdAt: serverTimestamp()
+        });
+
+      }
+
+    }
 
     setText("");
 

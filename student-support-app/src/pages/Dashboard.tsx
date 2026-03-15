@@ -200,6 +200,13 @@ export default function Dashboard() {
 
         </button>
 
+        <button
+          onClick={() => navigate("/notifications")}
+          className="bg-[#EDE0D4] px-4 py-2 rounded-xl shadow hover:bg-[#D6CCC2]"
+        >
+       🔔 Notifications
+        </button>
+
       </div>
 
       {/* RECENT POSTS */}

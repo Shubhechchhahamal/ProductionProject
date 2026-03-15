@@ -17,6 +17,7 @@ import PostPage from "./pages/PostPage";
 import Inbox from "./pages/Inbox";
 import Chat from "./pages/Chat";
 import Students from "./pages/Students";
+import Notifications from "./pages/Notifications";
 
 import ProtectedRoute from "./ProtectedRoute";
 
@@ -30,6 +31,7 @@ export default function App() {
       <Route path="/signup" element={<Register />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/students" element={<Students />} />
+      <Route path="/notifications" element={<Notifications />} />
 
       {/* Protected Pages */}
       <Route
