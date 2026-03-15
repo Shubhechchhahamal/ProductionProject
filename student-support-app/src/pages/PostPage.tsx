@@ -15,6 +15,7 @@ import {
 import { useParams, useNavigate } from "react-router-dom";
 
 export default function PostPage() {
+
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -26,10 +27,13 @@ export default function PostPage() {
   const adminEmail = "s.hamal2465@student.leedsbeckett.ac.uk";
 
   useEffect(() => {
+
     const loadPost = async () => {
+
       if (!id) return;
 
       try {
+
         const postRef = doc(db, "posts", id);
         const postSnap = await getDoc(postRef);
 
@@ -59,12 +63,15 @@ export default function PostPage() {
     };
 
     loadPost();
+
   }, [id]);
 
   const handleReply = async () => {
+
     if (!newReply.trim() || !id) return;
 
     try {
+
       const user = auth.currentUser;
 
       if (!user) {
@@ -72,7 +79,6 @@ export default function PostPage() {
         return;
       }
 
-      // 🔹 AI moderation
       const safe = await checkAIModeration(newReply);
 
       if (!safe) {
@@ -113,6 +119,7 @@ export default function PostPage() {
   };
 
   const handleDelete = async () => {
+
     if (!id) return;
 
     const confirmDelete = window.confirm("Delete this post?");
@@ -120,17 +127,52 @@ export default function PostPage() {
     if (!confirmDelete) return;
 
     try {
+
       await deleteDoc(doc(db, "posts", id));
+
       navigate("/posts");
+
     } catch (error) {
+
       console.error("Delete error:", error);
+
     }
+  };
+
+  // NEW: delete reply
+  const handleDeleteReply = async (replyId: string) => {
+
+    if (!id) return;
+
+    const confirmDelete = window.confirm("Delete this comment?");
+
+    if (!confirmDelete) return;
+
+    try {
+
+      await deleteDoc(doc(db, "posts", id, "replies", replyId));
+
+      setReplies(replies.filter((reply) => reply.id !== replyId));
+
+    } catch (error) {
+
+      console.error("Reply delete error:", error);
+
+    }
+
   };
 
   if (loading) return <div className="p-6">Loading post...</div>;
   if (!post) return <div className="p-6">Post not found</div>;
 
+  const currentUser = auth.currentUser;
+
+  const canDeletePost =
+    currentUser?.email === adminEmail ||
+    currentUser?.uid === post.userId;
+
   return (
+
     <div className="min-h-screen bg-[#F8F3EF] py-10 px-6 text-[#5C4033]">
 
       <div className="max-w-3xl mx-auto">
@@ -143,7 +185,7 @@ export default function PostPage() {
               {post.category}
             </span>
 
-            {auth.currentUser?.email === adminEmail && (
+            {canDeletePost && (
               <button
                 onClick={handleDelete}
                 className="text-red-500 text-sm hover:underline"
@@ -151,6 +193,7 @@ export default function PostPage() {
                 Delete
               </button>
             )}
+
           </div>
 
           <p
@@ -177,28 +220,57 @@ export default function PostPage() {
           </h2>
 
           {replies.length === 0 ? (
+
             <p className="text-sm text-gray-500">
               No replies yet.
             </p>
+
           ) : (
+
             <div className="space-y-3">
-              {replies.map((reply) => (
-                <div key={reply.id} className="bg-white border rounded-lg p-4">
 
-                  <p
-                    className="text-xs text-gray-500 mb-1 cursor-pointer hover:underline"
-                    onClick={() => navigate(`/profile/${reply.userId}`)}
-                  >
-                    {reply.userName}
-                  </p>
+              {replies.map((reply) => {
 
-                  <p className="text-sm text-gray-700">
-                    {reply.message}
-                  </p>
+                const canDeleteReply =
+                  currentUser?.email === adminEmail ||
+                  currentUser?.uid === reply.userId;
 
-                </div>
-              ))}
+                return (
+
+                  <div key={reply.id} className="bg-white border rounded-lg p-4 flex justify-between">
+
+                    <div>
+
+                      <p
+                        className="text-xs text-gray-500 mb-1 cursor-pointer hover:underline"
+                        onClick={() => navigate(`/profile/${reply.userId}`)}
+                      >
+                        {reply.userName}
+                      </p>
+
+                      <p className="text-sm text-gray-700">
+                        {reply.message}
+                      </p>
+
+                    </div>
+
+                    {canDeleteReply && (
+                      <button
+                        onClick={() => handleDeleteReply(reply.id)}
+                        className="text-red-500 text-xs hover:underline"
+                      >
+                        Delete
+                      </button>
+                    )}
+
+                  </div>
+
+                );
+
+              })}
+
             </div>
+
           )}
 
           <div className="mt-6 flex gap-2">

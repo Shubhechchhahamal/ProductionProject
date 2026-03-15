@@ -8,7 +8,8 @@ import {
   doc,
   getDoc,
   orderBy,
-  limit
+  limit,
+  deleteDoc
 } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 
@@ -64,20 +65,16 @@ export default function Inbox() {
 
         msgSnap.forEach((m) => {
           const data = m.data();
-
           lastMessage = data.text;
 
           if (data.timestamp) {
-
             timestampValue = data.timestamp.seconds;
-
             time = new Date(
               data.timestamp.seconds * 1000
             ).toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit"
             });
-
           }
         });
 
@@ -91,7 +88,6 @@ export default function Inbox() {
 
       }
 
-      // Sort chats by newest message
       chatList.sort((a, b) => b.timestamp - a.timestamp);
 
       setChats(chatList);
@@ -102,13 +98,25 @@ export default function Inbox() {
 
   }, []);
 
+  const deleteConversation = async (chatId:string) => {
+
+    const confirmDelete = window.confirm("Delete this conversation?");
+    if(!confirmDelete) return;
+
+    try{
+      await deleteDoc(doc(db,"chats",chatId));
+      setChats(chats.filter((c)=>c.id !== chatId));
+    }catch(err){
+      console.error("Delete chat error",err);
+    }
+
+  };
+
   return (
 
     <div className="min-h-screen bg-[#F8F3EF] p-6 text-[#7F5539]">
 
-      <h1 className="text-2xl font-bold mb-6">
-        Inbox
-      </h1>
+      <h1 className="text-2xl font-bold mb-6">Inbox</h1>
 
       {chats.length === 0 && (
         <p>No conversations yet</p>
@@ -119,24 +127,34 @@ export default function Inbox() {
         <div
           key={chat.id}
           onClick={() => navigate(`/chat/${chat.id}`)}
-          className="bg-white p-4 rounded-xl shadow mb-3 cursor-pointer hover:bg-[#EDE0D4]"
+          className="bg-white p-4 rounded-xl shadow mb-3 cursor-pointer hover:bg-[#EDE0D4] flex justify-between items-center"
         >
 
-          <div className="flex justify-between items-center">
+          <div>
+            <p className="font-semibold">{chat.name}</p>
 
-            <p className="font-semibold">
-              {chat.name}
+            <p className="text-sm opacity-60">
+              {chat.lastMessage}
             </p>
+          </div>
+
+          <div className="flex items-center gap-3">
 
             <span className="text-xs opacity-60">
               {chat.time}
             </span>
 
-          </div>
+            <button
+              onClick={(e)=>{
+                e.stopPropagation();
+                deleteConversation(chat.id);
+              }}
+              className="text-lg opacity-60 hover:opacity-100"
+            >
+              ⋮
+            </button>
 
-          <p className="text-sm opacity-60">
-            {chat.lastMessage}
-          </p>
+          </div>
 
         </div>
 
