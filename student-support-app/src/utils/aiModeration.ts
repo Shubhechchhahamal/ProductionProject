@@ -30,9 +30,10 @@ export async function checkAIModeration(text: string): Promise<boolean> {
     );
 
     if (!response.ok) {
-      console.error("Perspective API request failed:", response.status);
-      return true;
-    }
+  const errorText = await response.text();
+  console.error("Perspective API error response:", errorText);
+  return true;
+}
 
     const data = await response.json();
 
