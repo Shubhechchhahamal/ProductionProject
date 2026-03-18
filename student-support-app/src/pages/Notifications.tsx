@@ -5,7 +5,9 @@ import {
   query,
   where,
   orderBy,
-  getDocs
+  getDocs,
+  updateDoc,
+  doc
 } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 
@@ -23,25 +25,40 @@ export default function Notifications() {
       const user = auth.currentUser;
       if (!user) return;
 
+      // 🔥 GET ALL NOTIFICATIONS
       const q = query(
         collection(db, "notifications"),
-        where("userId", "==", user.uid),
+        where("userId", "==", user.uid), // keep same as your DB
         orderBy("createdAt", "desc")
       );
 
       const snap = await getDocs(q);
 
       const list: any[] = [];
+      const updates: any[] = [];
 
-      snap.forEach((doc) => {
-        const data = doc.data();
+      snap.forEach((d) => {
+        const data = d.data();
 
+        // ❌ skip messages (your logic)
         if (data.type === "message") return;
 
-        list.push({ id: doc.id, ...data });
+        list.push({ id: d.id, ...data });
+
+        // 🔥 MARK AS READ
+        if (data.read === false) {
+          updates.push(
+            updateDoc(doc(db, "notifications", d.id), {
+              read: true
+            })
+          );
+        }
       });
 
-      // remove duplicates
+      // 🔥 WAIT FOR ALL READ UPDATES
+      await Promise.all(updates);
+
+      // 🔥 REMOVE DUPLICATES
       const uniqueList = list.filter(
         (item, index, self) =>
           index ===
@@ -54,14 +71,13 @@ export default function Notifications() {
 
       setNotifications(uniqueList);
       setLoading(false);
-
     };
 
     loadNotifications();
 
   }, []);
 
-  // 🔥 LOADING (modern)
+  // 🔥 LOADING UI
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4] p-6">

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { db } from "../firebase";
 import { collection, getDocs, orderBy, query } from "firebase/firestore";
@@ -17,9 +16,7 @@ export default function Posts() {
   useEffect(() => {
 
     const loadPosts = async () => {
-
       try {
- 
         const q = query(
           collection(db, "posts"),
           orderBy("createdAt", "desc")
@@ -47,7 +44,6 @@ export default function Posts() {
   }, []);
 
   const filterPosts = (category: string) => {
-
     setSelectedCategory(category);
 
     let filtered = posts;
@@ -68,7 +64,6 @@ export default function Posts() {
   };
 
   const handleSearch = (value: string) => {
-
     setSearchTerm(value);
 
     let filtered = posts;
@@ -120,9 +115,7 @@ export default function Posts() {
         className="w-full max-w-md p-3 mb-6 border rounded-lg"
       />
 
-      {/* Category filters */}
       <div className="flex gap-3 mb-6 flex-wrap">
-
         {[
           "All",
           "Accommodation",
@@ -131,7 +124,6 @@ export default function Posts() {
           "Events & Gatherings",
           "Friends"
         ].map((cat) => (
-
           <button
             key={cat}
             onClick={() => filterPosts(cat)}
@@ -143,50 +135,31 @@ export default function Posts() {
           >
             {cat}
           </button>
-
         ))}
-
       </div>
 
-      {/* Posts list */}
       {filteredPosts.length === 0 ? (
         <p>No posts found.</p>
       ) : (
-
         <div className="space-y-4">
-
           {filteredPosts.map((post) => (
-
             <div
               key={post.id}
               onClick={() => navigate(`/post/${post.id}`)}
               className="bg-[#EDE0D4] p-4 rounded-xl shadow hover:bg-[#D6CCC2] cursor-pointer transition"
             >
-
-              <p className="text-xs opacity-60">
-                {post.category}
-              </p>
-
-              <h2 className="font-semibold text-lg">
-                {post.title}
-              </h2>
-
-              <p className="text-sm opacity-80 mt-1">
-                {post.message}
-              </p>
+              <p className="text-xs opacity-60">{post.category}</p>
+              <h2 className="font-semibold text-lg">{post.title}</h2>
+              <p className="text-sm opacity-80 mt-1">{post.message}</p>
 
               {post.createdAt && (
                 <p className="text-xs opacity-50 mt-2">
                   {post.createdAt.toDate().toLocaleDateString()}
                 </p>
               )}
-
             </div>
-
           ))}
-
         </div>
-
       )}
 
     </div>
