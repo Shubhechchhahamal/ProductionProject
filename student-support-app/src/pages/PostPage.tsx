@@ -25,15 +25,16 @@ export default function PostPage() {
   const [newReply, setNewReply] = useState("");
   const [loading, setLoading] = useState(true);
 
+  const [activeMenu, setActiveMenu] = useState<string | null>(null);
+
   const adminEmail = "s.hamal2465@student.leedsbeckett.ac.uk";
+  const currentUser = auth.currentUser;
 
   useEffect(() => {
     const loadPost = async () => {
-
       if (!id) return;
 
       try {
-
         const postSnap = await getDoc(doc(db, "posts", id));
 
         if (postSnap.exists()) {
@@ -64,8 +65,8 @@ export default function PostPage() {
     loadPost();
   }, [id]);
 
+  // ADD REPLY
   const handleReply = async () => {
-
     if (!newReply.trim() || !id) return;
 
     const user = auth.currentUser;
@@ -93,30 +94,34 @@ export default function PostPage() {
     setReplies(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
   };
 
-  const currentUser = auth.currentUser;
+  // DELETE POST
+  const handleDeletePost = async () => {
+    if (!id) return;
 
-  // 🔥 LOADING SKELETON
+    try {
+      await deleteDoc(doc(db, "posts", id));
+      navigate("/home");
+    } catch (error) {
+      console.error("Delete post failed:", error);
+    }
+  };
+
+  // DELETE REPLY
+  const handleDeleteReply = async (replyId: string) => {
+    try {
+      if (!id) return;
+
+      await deleteDoc(doc(db, "posts", id, "replies", replyId));
+
+      setReplies((prev) => prev.filter((r) => r.id !== replyId));
+
+    } catch (error) {
+      console.error("Delete reply failed:", error);
+    }
+  };
+
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4] p-6">
-        <div className="max-w-3xl mx-auto space-y-6">
-
-          <div className="glass-effect p-6 rounded-2xl space-y-4 animate-pulse">
-            <div className="h-4 w-24 bg-gray-300 rounded"></div>
-            <div className="h-6 w-1/2 bg-gray-300 rounded"></div>
-            <div className="h-4 w-full bg-gray-300 rounded"></div>
-            <div className="h-4 w-3/4 bg-gray-300 rounded"></div>
-          </div>
-
-          <div className="glass-effect p-6 rounded-2xl space-y-3 animate-pulse">
-            <div className="h-4 w-32 bg-gray-300 rounded"></div>
-            <div className="h-4 w-full bg-gray-300 rounded"></div>
-            <div className="h-4 w-5/6 bg-gray-300 rounded"></div>
-          </div>
-
-        </div>
-      </div>
-    );
+    return <div className="p-6">Loading...</div>;
   }
 
   if (!post) return <div className="p-6">Post not found</div>;
@@ -125,7 +130,6 @@ export default function PostPage() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25, ease: "easeOut" }}
       className="min-h-screen bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4] py-10 px-6"
     >
 
@@ -134,15 +138,46 @@ export default function PostPage() {
         {/* POST */}
         <div className="glass-effect p-6 rounded-2xl shadow mb-6">
 
-          <div className="flex justify-between mb-3">
+          <div className="flex justify-between items-start">
+
             <span className="bg-indigo-100 text-indigo-600 px-3 py-1 rounded-full text-xs">
               {post.category}
             </span>
+
+            {/* 3 DOT MENU (POST) */}
+            <div className="relative">
+
+              <button
+                onClick={() =>
+                  setActiveMenu(activeMenu === "post" ? null : "post")
+                }
+                className="text-gray-500 text-xl hover:text-gray-700"
+              >
+                ⋯
+              </button>
+
+              {activeMenu === "post" && (
+                <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-lg w-32 border z-10">
+
+                  {(currentUser?.uid === post.userId || currentUser?.email === adminEmail) && (
+                    <button
+                      onClick={handleDeletePost}
+                      className="block w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-100"
+                    >
+                      Delete
+                    </button>
+                  )}
+
+                </div>
+              )}
+
+            </div>
+
           </div>
 
           <p
             onClick={() => navigate(`/profile/${post.userId}`)}
-            className="text-sm font-semibold cursor-pointer hover:underline"
+            className="text-sm font-semibold cursor-pointer hover:underline mt-2"
           >
             {post.userName}
           </p>
@@ -164,13 +199,13 @@ export default function PostPage() {
             Replies ({replies.length})
           </h2>
 
-          {replies.length === 0 ? (
-            <p className="text-sm text-gray-500">
-              No replies yet.
-            </p>
-          ) : (
-            replies.map((r) => (
-              <div key={r.id} className="bg-white/70 p-3 rounded-lg mb-3">
+          {replies.map((r) => (
+            <div
+              key={r.id}
+              className="bg-white/70 p-3 rounded-lg mb-3 flex justify-between"
+            >
+
+              <div>
                 <p
                   className="text-xs text-gray-500 cursor-pointer hover:underline"
                   onClick={() => navigate(`/profile/${r.userId}`)}
@@ -179,8 +214,38 @@ export default function PostPage() {
                 </p>
                 <p>{r.message}</p>
               </div>
-            ))
-          )}
+
+              {/* 3 DOT MENU (REPLY) */}
+              <div className="relative">
+
+                <button
+                  onClick={() =>
+                    setActiveMenu(activeMenu === r.id ? null : r.id)
+                  }
+                  className="text-gray-500 text-lg hover:text-gray-700"
+                >
+                  ⋯
+                </button>
+
+                {activeMenu === r.id && (
+                  <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-lg w-32 border z-10">
+
+                    {(currentUser?.uid === r.userId || currentUser?.email === adminEmail) && (
+                      <button
+                        onClick={() => handleDeleteReply(r.id)}
+                        className="block w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-100"
+                      >
+                        Delete
+                      </button>
+                    )}
+
+                  </div>
+                )}
+
+              </div>
+
+            </div>
+          ))}
 
           {/* INPUT */}
           <div className="flex gap-2 mt-4">
@@ -193,7 +258,7 @@ export default function PostPage() {
 
             <button
               onClick={handleReply}
-              className="bg-indigo-500 text-white px-6 rounded-lg hover:bg-indigo-600 transition"
+              className="bg-indigo-500 text-white px-6 rounded-lg hover:bg-indigo-600"
             >
               Reply
             </button>

@@ -19,7 +19,7 @@ export default function Posts() {
     const loadPosts = async () => {
 
       try {
-
+ 
         const q = query(
           collection(db, "posts"),
           orderBy("createdAt", "desc")

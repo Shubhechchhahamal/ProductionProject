@@ -45,53 +45,31 @@ export default function Dashboard() {
       {/* NAVBAR */}
       <div className="glass-effect flex items-center justify-between px-8 py-4 shadow-sm">
 
-        {/* LEFT */}
         <div className="flex items-center gap-6">
-
           <Link to="/home" className="text-xl font-bold gradient-text">
             🏡 HomeAway
           </Link>
 
           <div className="flex items-center gap-5 text-sm text-gray-600">
-
-            <Link to="/home" className="hover:text-indigo-600 transition">
-              🏠 Home
-            </Link>
-
-            <Link to="/inbox" className="hover:text-indigo-600 transition">
-              💬 Messages
-            </Link>
-
-            <Link to="/notifications" className="hover:text-indigo-600 transition">
-              🔔 Notifications
-            </Link>
-
-            <Link to="/create-post" className="hover:text-indigo-600 transition">
-              ➕ New Post
-            </Link>
-
+            <Link to="/home" className="hover:text-indigo-600">🏠 Home</Link>
+            <Link to="/inbox" className="hover:text-indigo-600">💬 Messages</Link>
+            <Link to="/notifications" className="hover:text-indigo-600">🔔 Notifications</Link>
+            <Link to="/create-post" className="hover:text-indigo-600">➕ New Post</Link>
           </div>
-
         </div>
 
-        {/* RIGHT SIDE */}
         <div className="flex items-center gap-4">
-
-          {/* SEARCH */}
           <input
-            type="text"
             placeholder="Search posts..."
-            className="bg-white/70 px-5 py-2 rounded-full w-64 outline-none focus:ring-2 focus:ring-indigo-300 transition"
+            className="bg-purple-50 border-2 border-purple-300 px-5 py-2 rounded-full w-64"
           />
 
-          {/* LOGOUT */}
           <button
             onClick={handleLogout}
-            className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition"
+            className="bg-purple-100 text-purple-600 px-4 py-2 rounded-full"
           >
             Logout
           </button>
-
         </div>
 
       </div>
@@ -99,48 +77,23 @@ export default function Dashboard() {
       {/* CONTENT */}
       <div className="max-w-4xl mx-auto p-6">
 
-        {/* HERO */}
-        <div className="glass-effect p-8 rounded-2xl text-center mb-6 hover-lift">
-          <h2 className="text-3xl font-bold gradient-text mb-2">
-            📈 Community Feed
-          </h2>
-          <p className="text-gray-500">
-            Connect, share, and discover with fellow students
-          </p>
+        <div className="glass-effect p-8 rounded-2xl text-center mb-6">
+          <h2 className="text-3xl font-bold gradient-text">📈 Community Feed</h2>
+          <p className="text-gray-500">Connect, share, and discover</p>
         </div>
 
-        {/* POSTS */}
         <div className="space-y-6">
           {posts.map((post) => (
             <div
               key={post.id}
               onClick={() => navigate(`/post/${post.id}`)}
-              className="glass-effect p-6 rounded-2xl hover-lift cursor-pointer transition hover:scale-[1.01]"
+              className="glass-effect p-6 rounded-2xl cursor-pointer hover:scale-[1.01]"
             >
+              <p className="text-sm font-semibold">{post.userName}</p>
 
-              <div className="flex justify-between items-center mb-4">
-                <div>
-                  <p className="text-sm font-semibold">
-                    {post.userName || "Anonymous"}
-                  </p>
-                  <p className="text-xs text-gray-400">
-                    {post.createdAt?.toDate?.().toLocaleString()}
-                  </p>
-                </div>
+              <h3 className="font-semibold text-lg">{post.title}</h3>
 
-                <span className="bg-indigo-100 text-indigo-600 px-3 py-1 rounded-full text-xs">
-                  {post.category}
-                </span>
-              </div>
-
-              <h3 className="font-semibold text-lg mb-2">
-                {post.title}
-              </h3>
-
-              <p className="text-gray-600 mb-4">
-                {post.message}
-              </p>
-
+              <p className="text-gray-600">{post.message}</p>
             </div>
           ))}
         </div>
