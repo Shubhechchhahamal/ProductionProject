@@ -1,288 +1,151 @@
 import { useEffect, useState } from "react";
-import { auth, db } from "../firebase";
+import { db, auth } from "../firebase";
 import {
-  doc,
-  getDoc,
   collection,
   getDocs,
-  orderBy,
   query,
-  limit
+  orderBy
 } from "firebase/firestore";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { signOut } from "firebase/auth";
 
 export default function Dashboard() {
 
+  const [posts, setPosts] = useState<any[]>([]);
   const navigate = useNavigate();
 
-  const [name, setName] = useState("");
-  const [posts, setPosts] = useState<any[]>([]);
-  const [userCount, setUserCount] = useState(0);
-
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(true);
-
   useEffect(() => {
+    const loadPosts = async () => {
+      const q = query(
+        collection(db, "posts"),
+        orderBy("createdAt", "desc")
+      );
 
-    const loadDashboard = async () => {
+      const snap = await getDocs(q);
 
-      try {
+      const list: any[] = [];
+      snap.forEach((doc) => {
+        list.push({ id: doc.id, ...doc.data() });
+      });
 
-        const currentUser = auth.currentUser;
-
-        if (!currentUser) {
-          setLoading(false);
-          return;
-        }
-
-        /* ADMIN CHECK */
-
-        if (
-          currentUser.email?.toLowerCase() ===
-          "s.hamal2465@student.leedsbeckett.ac.uk"
-        ) {
-          setIsAdmin(true);
-        }
-
-        /* LOAD USER PROFILE */
-
-        const userRef = doc(db, "users", currentUser.uid);
-        const userSnap = await getDoc(userRef);
-
-        if (userSnap.exists()) {
-          const data: any = userSnap.data();
-          setName(data.name || "");
-        }
-
-        /* LOAD RECENT POSTS */
-
-        const postsQuery = query(
-          collection(db, "posts"),
-          orderBy("createdAt", "desc"),
-          limit(3)
-        );
-
-        const postsSnap = await getDocs(postsQuery);
-
-        const postsData = await Promise.all(
-          postsSnap.docs.map(async (docSnap) => {
-
-            const data: any = docSnap.data();
-
-            const repliesRef = collection(db, "posts", docSnap.id, "replies");
-            const repliesSnap = await getDocs(repliesRef);
-
-            return {
-              id: docSnap.id,
-              userId: data.userId || null,
-              userName: data.userName || "Unknown user",
-              category: data.category || "",
-              title: data.title || "",
-              message: data.message || "",
-              commentCount: repliesSnap.size
-            };
-
-          })
-        );
-
-        setPosts(postsData);
-
-        /* LOAD USER COUNT */
-
-        const usersSnap = await getDocs(collection(db, "users"));
-        setUserCount(usersSnap.size);
-
-      } catch (error) {
-
-        console.error("Dashboard load error:", error);
-
-      }
-
-      setLoading(false);
-
+      setPosts(list);
     };
 
-    loadDashboard();
-
+    loadPosts();
   }, []);
 
   const handleLogout = async () => {
-
     await signOut(auth);
-    navigate("/");
-
+    navigate("/login");
   };
 
-  if (loading) {
-
-    return (
-      <div className="flex justify-center items-center h-screen text-[#7F5539]">
-        Loading...
-      </div>
-    );
-
-  }
-
-  const firstName = name ? name.split(" ")[0] : "";
-
   return (
+    <div className="min-h-screen bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4]">
 
-    <div className="min-h-screen bg-[#F8F3EF] text-[#7F5539] p-6">
+      {/* NAVBAR */}
+      <div className="glass-effect flex items-center justify-between px-8 py-4 shadow-sm">
 
-      {/* HEADER */}
+        {/* LEFT */}
+        <div className="flex items-center gap-6">
 
-      <div className="flex justify-between items-start mb-10">
+          <Link to="/home" className="text-xl font-bold gradient-text">
+            🏡 HomeAway
+          </Link>
 
-        <div>
+          <div className="flex items-center gap-5 text-sm text-gray-600">
 
-          <h1 className="text-3xl font-bold">
-            Welcome, {firstName} 👋
-          </h1>
+            <Link to="/home" className="hover:text-indigo-600 transition">
+              🏠 Home
+            </Link>
 
-          <p className="text-sm opacity-70 mt-1">
-            Connect with other international students and find support.
-          </p>
+            <Link to="/inbox" className="hover:text-indigo-600 transition">
+              💬 Messages
+            </Link>
+
+            <Link to="/notifications" className="hover:text-indigo-600 transition">
+              🔔 Notifications
+            </Link>
+
+            <Link to="/create-post" className="hover:text-indigo-600 transition">
+              ➕ New Post
+            </Link>
+
+          </div>
 
         </div>
 
-        <img
-          src="/homeaway-logo.png"
-          alt="HomeAway"
-          className="h-28 object-contain opacity-90"
-        />
+        {/* RIGHT SIDE */}
+        <div className="flex items-center gap-4">
+
+          {/* SEARCH */}
+          <input
+            type="text"
+            placeholder="Search posts..."
+            className="bg-white/70 px-5 py-2 rounded-full w-64 outline-none focus:ring-2 focus:ring-indigo-300 transition"
+          />
+
+          {/* LOGOUT */}
+          <button
+            onClick={handleLogout}
+            className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition"
+          >
+            Logout
+          </button>
+
+        </div>
 
       </div>
 
-    
+      {/* CONTENT */}
+      <div className="max-w-4xl mx-auto p-6">
 
-      {/* DASHBOARD BUTTONS */}
+        {/* HERO */}
+        <div className="glass-effect p-8 rounded-2xl text-center mb-6 hover-lift">
+          <h2 className="text-3xl font-bold gradient-text mb-2">
+            📈 Community Feed
+          </h2>
+          <p className="text-gray-500">
+            Connect, share, and discover with fellow students
+          </p>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-6">
-
-        <button
-          onClick={() => navigate("/profile")}
-          className="p-6 rounded-2xl shadow bg-[#EDE0D4] hover:bg-[#D6CCC2] hover:shadow-lg hover:-translate-y-1 text-left transition"
-        >
-
-          <h2 className="text-xl font-semibold">👤 My Profile</h2>
-          <p className="text-sm mt-2">View & edit your student info</p>
-
-        </button>
-
-        <button
-          onClick={() => navigate("/inbox")}
-          className="p-6 rounded-2xl shadow bg-[#EDE0D4] hover:bg-[#D6CCC2] hover:shadow-lg hover:-translate-y-1 text-left transition"
-        >
-
-          <h2 className="text-xl font-semibold">💬 Messages</h2>
-          <p className="text-sm mt-2">Talk privately with other students</p>
-
-        </button>
-
-        <button
-          onClick={() => navigate("/posts")}
-          className="p-6 rounded-2xl shadow bg-[#EDE0D4] hover:bg-[#D6CCC2] hover:shadow-lg hover:-translate-y-1 text-left transition"
-        >
-
-          <h2 className="text-xl font-semibold">🌍 Community</h2>
-          <p className="text-sm mt-2">See helpful posts</p>
-
-        </button>
-
-        <button
-          onClick={() => navigate("/students")}
-          className="p-6 rounded-2xl shadow bg-[#EDE0D4] hover:bg-[#D6CCC2] hover:shadow-lg hover:-translate-y-1 text-left transition"
-        >
-
-          <h2 className="text-xl font-semibold">🎓 Students</h2>
-          <p className="text-sm mt-2">Find international students</p>
-
-        </button>
-
-        <button
-          onClick={() => navigate("/notifications")}
-          className="bg-[#EDE0D4] px-4 py-2 rounded-xl shadow hover:bg-[#D6CCC2]"
-        >
-       🔔 Notifications
-        </button>
-
-      </div>
-
-      {/* RECENT POSTS */}
-
-      <div className="space-y-4 mt-12">
-
-        <h2 className="text-xl font-semibold">Recent Support Posts</h2>
-
-        {posts.length === 0 ? (
-
-          <p>No posts yet.</p>
-
-        ) : (
-
-          posts.map((post) => (
-
+        {/* POSTS */}
+        <div className="space-y-6">
+          {posts.map((post) => (
             <div
               key={post.id}
               onClick={() => navigate(`/post/${post.id}`)}
-              className="bg-[#EDE0D4] p-5 rounded-2xl shadow hover:bg-[#D6CCC2] hover:shadow-lg cursor-pointer transition"
+              className="glass-effect p-6 rounded-2xl hover-lift cursor-pointer transition hover:scale-[1.01]"
             >
 
-              <p
-                onClick={(e) => {
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <p className="text-sm font-semibold">
+                    {post.userName || "Anonymous"}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    {post.createdAt?.toDate?.().toLocaleString()}
+                  </p>
+                </div>
 
-                  e.stopPropagation();
+                <span className="bg-indigo-100 text-indigo-600 px-3 py-1 rounded-full text-xs">
+                  {post.category}
+                </span>
+              </div>
 
-                  if (!post.userId) return;
-
-                  navigate(`/profile/${post.userId}`);
-
-                }}
-                className="text-sm font-semibold hover:underline cursor-pointer"
-              >
-
-                {post.userName}
-
-              </p>
-
-              <p className="text-xs opacity-60">
-                {post.category}
-              </p>
-
-              <p className="font-medium">
+              <h3 className="font-semibold text-lg mb-2">
                 {post.title}
-              </p>
+              </h3>
 
-              <p className="text-sm opacity-80">
+              <p className="text-gray-600 mb-4">
                 {post.message}
               </p>
 
-              <p className="text-xs opacity-70 mt-2">
-                💬 {post.commentCount} comments
-              </p>
-
             </div>
-
-          ))
-
-        )}
+          ))}
+        </div>
 
       </div>
-
-      {/* LOGOUT */}
-
-      <button
-        onClick={handleLogout}
-        className="mt-10 bg-[#B08968] hover:bg-[#9C6644] text-white px-6 py-3 rounded-xl transition"
-      >
-
-        Logout
-
-      </button>
-
     </div>
-
   );
-
 }

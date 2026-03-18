@@ -1,10 +1,14 @@
 import { useState } from "react";
-import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  sendEmailVerification
+} from "firebase/auth";
 import { auth, db } from "../firebase";
 import { setDoc, doc, getDoc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 
 export default function Register() {
+
   const navigate = useNavigate();
 
   const [name, setName] = useState("");
@@ -12,6 +16,7 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,6 +32,9 @@ export default function Register() {
     }
 
     try {
+
+      setLoading(true);
+
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
@@ -65,62 +73,74 @@ export default function Register() {
       }
 
     }
+
+    setLoading(false);
   };
 
   return (
-    <div className="w-full flex justify-center items-center p-6">
+
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4] px-4">
+
       <form
         onSubmit={handleRegister}
-        className="bg-white p-8 rounded-2xl shadow-md w-full max-w-md space-y-4"
+        className="glass-effect p-8 rounded-2xl shadow w-full max-w-md space-y-5"
       >
 
-        <h2 className="text-center text-xl font-semibold text-[#7F5539]">
-          Create Account
+        <h2 className="text-center text-2xl font-bold gradient-text">
+          ✨ Create Account
         </h2>
 
+        {/* NAME */}
         <input
           type="text"
           placeholder="Full Name"
-          className="w-full p-2 border rounded"
+          className="w-full p-3 rounded-lg border outline-none focus:ring-2 focus:ring-indigo-300"
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
         />
 
+        {/* EMAIL */}
         <input
           type="email"
           placeholder="University Email"
-          className="w-full p-2 border rounded"
+          className="w-full p-3 rounded-lg border outline-none focus:ring-2 focus:ring-indigo-300"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
         />
 
+        {/* PASSWORD */}
         <input
           type="password"
           placeholder="Password"
-          className="w-full p-2 border rounded"
+          className="w-full p-3 rounded-lg border outline-none focus:ring-2 focus:ring-indigo-300"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
         />
 
+        {/* ERROR */}
         {error && (
           <p className="text-red-500 text-sm text-center">{error}</p>
         )}
 
+        {/* SUCCESS */}
         {success && (
           <p className="text-green-600 text-sm text-center">{success}</p>
         )}
 
+        {/* BUTTON */}
         <button
           type="submit"
-          className="bg-[#D6CCC2] w-full py-2 rounded text-[#7F5539] font-semibold hover:bg-[#B08968]"
+          disabled={loading}
+          className="w-full bg-indigo-500 text-white py-3 rounded-xl font-semibold hover:bg-indigo-600 transition"
         >
-          Register
+          {loading ? "Creating..." : "Register"}
         </button>
 
       </form>
+
     </div>
   );
 }

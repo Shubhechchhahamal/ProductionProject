@@ -1,84 +1,115 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { createUserWithEmailAndPassword,} from "firebase/auth";
-import { auth } from "../firebase"; // make sure this path is correct
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth, db } from "../firebase";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 
 export default function Register() {
+
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
+
+    if (!fullName || !email || !password) {
+      setMessage("Please fill all fields");
+      return;
+    }
+
     try {
+
+      setLoading(true);
+
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
         password
       );
 
-      
+      const user = userCredential.user;
 
-      setMessage("Verification email sent! Please check your inbox.");
+      // ✅ Create user profile in Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        name: fullName,
+        email,
+        createdAt: serverTimestamp()
+      });
+
+      setMessage("Account created successfully!");
 
     } catch (error: any) {
       setMessage(error.message);
     }
+
+    setLoading(false);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#F8F3EF] to-[#F1E8E0] px-4">
-      <div className="bg-white p-10 rounded-2xl shadow-md w-full max-w-md">
 
-        <h2 className="text-2xl font-semibold text-center mb-6 text-[#B08968]">
-          Create Account
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4] px-4">
+
+      <div className="glass-effect p-10 rounded-2xl shadow w-full max-w-md space-y-5">
+
+        <h2 className="text-2xl font-bold text-center gradient-text">
+          ✨ Create Account
         </h2>
 
+        {/* NAME */}
         <input
           type="text"
           placeholder="Full Name"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
-          className="w-full p-3 mb-4 border border-[#E6DCD3] rounded-lg bg-[#F8F5F2]"
+          className="w-full p-3 rounded-lg border outline-none focus:ring-2 focus:ring-indigo-300"
         />
 
+        {/* EMAIL */}
         <input
           type="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full p-3 mb-4 border border-[#E6DCD3] rounded-lg bg-[#F8F5F2]"
+          className="w-full p-3 rounded-lg border outline-none focus:ring-2 focus:ring-indigo-300"
         />
 
+        {/* PASSWORD */}
         <input
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full p-3 mb-6 border border-[#E6DCD3] rounded-lg bg-[#F8F5F2]"
+          className="w-full p-3 rounded-lg border outline-none focus:ring-2 focus:ring-indigo-300"
         />
 
+        {/* BUTTON */}
         <button
           onClick={handleRegister}
-          className="w-full py-3 rounded-lg bg-[#EDE0D4] text-[#7F5539] font-medium hover:bg-[#D6CCC2] transition"
+          disabled={loading}
+          className="w-full py-3 rounded-xl bg-indigo-500 text-white font-semibold hover:bg-indigo-600 transition"
         >
-          Register
+          {loading ? "Creating..." : "Register"}
         </button>
 
+        {/* MESSAGE */}
         {message && (
-          <p className="text-sm text-center mt-4 text-[#7F5539]">
+          <p className="text-sm text-center text-gray-600">
             {message}
           </p>
         )}
 
-        <p className="text-sm text-center mt-4 text-[#7F5539]">
+        {/* LOGIN LINK */}
+        <p className="text-sm text-center text-gray-500">
           Already have an account?{" "}
-          <Link to="/login" className="underline text-[#B08968]">
+          <Link to="/login" className="text-indigo-500 hover:underline">
             Login
           </Link>
         </p>
 
       </div>
+
     </div>
   );
 }

@@ -21,115 +21,101 @@ export default function Profile() {
   const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-   useEffect(() => {
+  useEffect(() => {
 
-  const unsubscribe = auth.onAuthStateChanged(async (user) => {
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
 
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-
-      const profileUid = uid || user.uid;
-
-      const ref = doc(db, "users", profileUid);
-      const snap = await getDoc(ref);
-
-      if (snap.exists()) {
-
-        setUserData({
-          uid: profileUid,
-          ...snap.data()
-        });
-
-      } else {
-
-        console.log("Creating missing profile document...");
-
-        await setDoc(ref, {
-          name: user.email || "User",
-          email: user.email,
-          createdAt: serverTimestamp()
-        });
-
-        const newSnap = await getDoc(ref);
-
-        setUserData({
-          uid: profileUid,
-          ...newSnap.data()
-        });
-
+      if (!user) {
+        setLoading(false);
+        return;
       }
 
-    } catch (error) {
+      try {
 
-      console.error("Profile load error:", error);
+        const profileUid = uid || user.uid;
 
-    }
+        const ref = doc(db, "users", profileUid);
+        const snap = await getDoc(ref);
 
-    setLoading(false);
+        if (snap.exists()) {
 
-  });
+          setUserData({
+            uid: profileUid,
+            ...snap.data()
+          });
 
-  return () => unsubscribe();
+        } else {
 
-}, [uid]);
+          await setDoc(ref, {
+            name: user.email || "User",
+            email: user.email,
+            createdAt: serverTimestamp()
+          });
+
+          const newSnap = await getDoc(ref);
+
+          setUserData({
+            uid: profileUid,
+            ...newSnap.data()
+          });
+
+        }
+
+      } catch (error) {
+        console.error("Profile load error:", error);
+      }
+
+      setLoading(false);
+
+    });
+
+    return () => unsubscribe();
+
+  }, [uid]);
 
   const startChat = async () => {
 
     const currentUser = auth.currentUser;
     if (!currentUser || !userData) return;
 
-    try {
+    const chatsRef = collection(db, "chats");
 
-      const chatsRef = collection(db, "chats");
+    const q = query(
+      chatsRef,
+      where("participants", "array-contains", currentUser.uid)
+    );
 
-      const q = query(
-        chatsRef,
-        where("participants", "array-contains", currentUser.uid)
-      );
+    const snapshot = await getDocs(q);
 
-      const snapshot = await getDocs(q);
+    for (const docSnap of snapshot.docs) {
+      const data: any = docSnap.data();
 
-      for (const docSnap of snapshot.docs) {
-
-        const data: any = docSnap.data();
-
-        if (data.participants.includes(userData.uid)) {
-          navigate(`/chat/${docSnap.id}`);
-          return;
-        }
-
+      if (data.participants.includes(userData.uid)) {
+        navigate(`/chat/${docSnap.id}`);
+        return;
       }
-
-      const chat = await addDoc(chatsRef, {
-        participants: [currentUser.uid, userData.uid],
-        createdAt: serverTimestamp()
-      });
-
-      navigate(`/chat/${chat.id}`);
-
-    } catch (error) {
-      console.error("Error starting chat:", error);
     }
 
+    const chat = await addDoc(chatsRef, {
+      participants: [currentUser.uid, userData.uid],
+      createdAt: serverTimestamp()
+    });
+
+    navigate(`/chat/${chat.id}`);
   };
 
-
-
+  // 🔥 LOADING
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen text-[#7F5539]">
-        Loading profile...
+      <div className="min-h-screen bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4] flex justify-center items-center">
+        <div className="glass-effect p-6 rounded-xl animate-pulse w-64 h-32"></div>
       </div>
     );
   }
 
   if (!userData) {
     return (
-      <div className="flex justify-center items-center h-screen text-[#7F5539]">
+      <div className="min-h-screen flex justify-center items-center text-gray-500">
         No user info found
       </div>
     );
@@ -139,84 +125,86 @@ export default function Profile() {
 
   return (
 
-    <div className="min-h-screen bg-[#F8F3EF] p-6 text-[#7F5539]">
+    <div className="min-h-screen bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4] p-6">
 
-      {/* Back Button */}
+      <div className="max-w-xl mx-auto">
 
-      <button
-        className="mb-6 underline"
-        onClick={() => navigate(-1)}
-      >
-        ← Back
-      </button>
+        {/* BACK */}
+        <button
+          className="mb-6 text-indigo-500 hover:underline"
+          onClick={() => navigate(-1)}
+        >
+          ← Back
+        </button>
 
-      {/* Profile Card */}
+        {/* PROFILE CARD */}
+        <div className="glass-effect p-8 rounded-2xl shadow text-center">
 
-      <div className="bg-white max-w-xl mx-auto p-8 rounded-3xl shadow text-center">
+          <h1 className="text-2xl font-bold text-gray-800">
+            {userData.name || "Unnamed user"}
+          </h1>
 
-        <h1 className="text-2xl font-bold">
-          {userData.name || "Unnamed user"}
-        </h1>
-
-        <p className="mt-2">
-          🌍 {userData.country || "Unknown"}
-        </p>
-
-        {userData.yearsInUK && (
-          <p className="text-sm mt-1 opacity-80">
-            🇬🇧 In the UK for {userData.yearsInUK}
+          <p className="mt-2 text-gray-500">
+            🌍 {userData.country || "Unknown"}
           </p>
-        )}
 
-        {userData.languages && (
-          <p className="text-sm mt-1 opacity-70">
-            🗣️ {userData.languages}
-          </p>
-        )}
-
-        {userData.university && (
-          <p className="text-sm mt-1 opacity-70">
-            🎓 {userData.university}
-          </p>
-        )}
-
-        {userData.helpOffer && (
-          <div className="mt-4 bg-[#EDE0D4] p-3 rounded-lg">
-            <p className="text-sm font-semibold">
-              I can help with
+          {userData.yearsInUK && (
+            <p className="text-sm mt-1 text-gray-500">
+              🇬🇧 In the UK for {userData.yearsInUK}
             </p>
-            <p className="text-sm">
-              {userData.helpOffer}
+          )}
+
+          {userData.languages && (
+            <p className="text-sm mt-1 text-gray-500">
+              🗣️ {userData.languages}
             </p>
+          )}
+
+          {userData.university && (
+            <p className="text-sm mt-1 text-gray-500">
+              🎓 {userData.university}
+            </p>
+          )}
+
+          {userData.helpOffer && (
+            <div className="mt-5 bg-indigo-50 p-4 rounded-xl">
+              <p className="text-sm font-semibold text-indigo-600">
+                I can help with
+              </p>
+              <p className="text-sm text-gray-700 mt-1">
+                {userData.helpOffer}
+              </p>
+            </div>
+          )}
+
+          {/* BUTTONS */}
+          <div className="mt-6 flex justify-center gap-3">
+
+            {currentUser?.uid === userData.uid && (
+              <button
+                onClick={() => navigate("/edit-profile")}
+                className="bg-indigo-500 text-white px-5 py-2 rounded-lg hover:bg-indigo-600 transition"
+              >
+                Edit Profile
+              </button>
+            )}
+
+            {currentUser?.uid !== userData.uid && (
+              <button
+                onClick={startChat}
+                className="bg-indigo-500 text-white px-5 py-2 rounded-lg hover:bg-indigo-600 transition"
+              >
+                Message
+              </button>
+            )}
+
           </div>
-        )}
 
-        {/* Edit profile button */}
-
-        {currentUser?.uid === userData.uid && (
-          <button
-            onClick={() => navigate("/edit-profile")}
-            className="mt-6 bg-[#B08968] text-white px-4 py-2 rounded-lg hover:bg-[#7F5539]"
-          >
-            Edit Profile
-          </button>
-        )}
-
-        {/* Message button */}
-
-        {currentUser?.uid !== userData.uid && (
-          <button
-            onClick={startChat}
-            className="mt-6 ml-3 bg-[#7F5539] text-white px-4 py-2 rounded-lg hover:bg-[#5E3B27]"
-          >
-            Message
-          </button>
-        )}
+        </div>
 
       </div>
 
     </div>
 
   );
-
 }

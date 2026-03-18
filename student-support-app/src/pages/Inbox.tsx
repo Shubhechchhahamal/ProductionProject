@@ -17,6 +17,7 @@ export default function Inbox() {
 
   const navigate = useNavigate();
   const [chats, setChats] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
 
@@ -54,9 +55,12 @@ export default function Inbox() {
         let lastMessage = "Start conversation";
         let time = "";
         let timestampValue = 0;
+        let unreadCount = 0;
+
+        const messagesRef = collection(db, "chats", chatDoc.id, "messages");
 
         const msgQuery = query(
-          collection(db, "chats", chatDoc.id, "messages"),
+          messagesRef,
           orderBy("timestamp", "desc"),
           limit(1)
         );
@@ -78,90 +82,142 @@ export default function Inbox() {
           }
         });
 
+        // unread count
+        const unreadQuery = query(
+          messagesRef,
+          where("read", "==", false)
+        );
+
+        const unreadSnap = await getDocs(unreadQuery);
+
+        unreadSnap.forEach((m) => {
+          const data: any = m.data();
+          if (data.senderId !== user.uid) {
+            unreadCount++;
+          }
+        });
+
         chatList.push({
           id: chatDoc.id,
           name,
           lastMessage,
           time,
-          timestamp: timestampValue
+          timestamp: timestampValue,
+          unreadCount
         });
-
       }
 
       chatList.sort((a, b) => b.timestamp - a.timestamp);
 
       setChats(chatList);
-
+      setLoading(false);
     };
 
     loadChats();
 
   }, []);
 
-  const deleteConversation = async (chatId:string) => {
+  const deleteConversation = async (chatId: string) => {
 
     const confirmDelete = window.confirm("Delete this conversation?");
-    if(!confirmDelete) return;
+    if (!confirmDelete) return;
 
-    try{
-      await deleteDoc(doc(db,"chats",chatId));
-      setChats(chats.filter((c)=>c.id !== chatId));
-    }catch(err){
-      console.error("Delete chat error",err);
+    try {
+      await deleteDoc(doc(db, "chats", chatId));
+      setChats(chats.filter((c) => c.id !== chatId));
+    } catch (err) {
+      console.error("Delete chat error", err);
     }
-
   };
+
+  // 🔥 LOADING UI
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4] p-6">
+        <div className="max-w-3xl mx-auto space-y-4">
+          <div className="glass-effect h-16 rounded-xl animate-pulse"></div>
+          <div className="glass-effect h-16 rounded-xl animate-pulse"></div>
+          <div className="glass-effect h-16 rounded-xl animate-pulse"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
 
-    <div className="min-h-screen bg-[#F8F3EF] p-6 text-[#7F5539]">
+    <div className="min-h-screen bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4] p-6">
 
-      <h1 className="text-2xl font-bold mb-6">Inbox</h1>
+      <div className="max-w-3xl mx-auto">
 
-      {chats.length === 0 && (
-        <p>No conversations yet</p>
-      )}
+        <h1 className="text-2xl font-bold gradient-text mb-6">
+          💬 Inbox
+        </h1>
 
-      {chats.map((chat) => (
+        {chats.length === 0 ? (
 
-        <div
-          key={chat.id}
-          onClick={() => navigate(`/chat/${chat.id}`)}
-          className="bg-white p-4 rounded-xl shadow mb-3 cursor-pointer hover:bg-[#EDE0D4] flex justify-between items-center"
-        >
-
-          <div>
-            <p className="font-semibold">{chat.name}</p>
-
-            <p className="text-sm opacity-60">
-              {chat.lastMessage}
-            </p>
+          <div className="glass-effect p-6 rounded-2xl text-center">
+            <p className="text-gray-500">No conversations yet</p>
           </div>
 
-          <div className="flex items-center gap-3">
+        ) : (
 
-            <span className="text-xs opacity-60">
-              {chat.time}
-            </span>
+          <div className="space-y-4">
 
-            <button
-              onClick={(e)=>{
-                e.stopPropagation();
-                deleteConversation(chat.id);
-              }}
-              className="text-lg opacity-60 hover:opacity-100"
-            >
-              ⋮
-            </button>
+            {chats.map((chat) => (
+
+              <div
+                key={chat.id}
+                onClick={() => navigate(`/chat/${chat.id}`)}
+                className="glass-effect p-5 rounded-2xl cursor-pointer hover:scale-[1.02] transition flex justify-between items-center"
+              >
+
+                {/* LEFT */}
+                <div>
+                  <p className="font-semibold text-gray-800">
+                    {chat.name}
+                  </p>
+
+                  <p className="text-sm text-gray-500 truncate max-w-[200px]">
+                    {chat.lastMessage}
+                  </p>
+                </div>
+
+                {/* RIGHT */}
+                <div className="flex items-center gap-3">
+
+                  {chat.unreadCount > 0 && (
+                    <span className="bg-indigo-500 text-white text-xs px-2 py-1 rounded-full">
+                      {chat.unreadCount}
+                    </span>
+                  )}
+
+                  <span className="text-xs text-gray-400">
+                    {chat.time}
+                  </span>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteConversation(chat.id);
+                    }}
+                    className="text-lg text-gray-400 hover:text-gray-700"
+                  >
+                    ⋮
+                  </button>
+
+                </div>
+
+              </div>
+
+            ))}
 
           </div>
 
-        </div>
+        )}
 
-      ))}
+      </div>
 
     </div>
 
   );
-
 }

@@ -40,7 +40,6 @@ export default function CreatePost() {
         return;
       }
 
-      // 🔹 AI MODERATION CHECK
       const safe = await checkAIModeration(title + " " + message);
 
       if (!safe) {
@@ -72,75 +71,81 @@ export default function CreatePost() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F3EF] p-6 text-[#7F5539]">
+    <div className="min-h-screen bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4] p-6">
 
-      <h1 className="text-3xl font-bold mb-6">
-        Create a Post
-      </h1>
+      <div className="max-w-xl mx-auto">
 
-      <form
-        onSubmit={handleSubmit}
-        className="max-w-xl space-y-4"
-      >
+        {/* TITLE */}
+        <h1 className="text-3xl font-bold gradient-text mb-6 text-center">
+          ✍️ Create a Post
+        </h1>
 
-        {/* Category */}
-        <div>
-          <label className="block text-sm mb-1">
-            Category
-          </label>
-
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="w-full p-3 rounded-lg border"
-          >
-            <option>Accommodation</option>
-            <option>Part-time Job</option>
-            <option>Academic Support</option>
-            <option>Events & Gatherings</option>
-            <option>Friends</option>
-          </select>
-        </div>
-
-        {/* Title */}
-        <div>
-          <label className="block text-sm mb-1">
-            Title
-          </label>
-
-          <input
-            type="text"
-            placeholder="Example: Room available near Leeds Beckett"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="w-full p-3 rounded-lg border"
-          />
-        </div>
-
-        {/* Message */}
-        <div>
-          <label className="block text-sm mb-1">
-            Message
-          </label>
-
-          <textarea
-            placeholder="Write your post here..."
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            className="w-full p-3 rounded-lg border h-32"
-          />
-        </div>
-
-        {/* Submit */}
-        <button
-          type="submit"
-          disabled={loading}
-          className="bg-[#B08968] text-white px-6 py-3 rounded-xl font-semibold hover:bg-[#7F5539]"
+        {/* FORM CARD */}
+        <form
+          onSubmit={handleSubmit}
+          className="glass-effect p-6 rounded-2xl shadow space-y-5"
         >
-          {loading ? "Posting..." : "Create Post"}
-        </button>
 
-      </form>
+          {/* Category */}
+          <div>
+            <label className="block text-sm mb-1 text-gray-600">
+              Category
+            </label>
+
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="w-full p-3 rounded-lg border outline-none focus:ring-2 focus:ring-indigo-300"
+            >
+              <option>Accommodation</option>
+              <option>Part-time Job</option>
+              <option>Academic Support</option>
+              <option>Events & Gatherings</option>
+              <option>Friends</option>
+            </select>
+          </div>
+
+          {/* Title */}
+          <div>
+            <label className="block text-sm mb-1 text-gray-600">
+              Title
+            </label>
+
+            <input
+              type="text"
+              placeholder="Example: Room available near Leeds Beckett"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full p-3 rounded-lg border outline-none focus:ring-2 focus:ring-indigo-300"
+            />
+          </div>
+
+          {/* Message */}
+          <div>
+            <label className="block text-sm mb-1 text-gray-600">
+              Message
+            </label>
+
+            <textarea
+              placeholder="Write your post here..."
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              className="w-full p-3 rounded-lg border h-32 outline-none focus:ring-2 focus:ring-indigo-300"
+            />
+          </div>
+
+          {/* Submit */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-indigo-500 text-white py-3 rounded-xl font-semibold hover:bg-indigo-600 transition"
+          >
+            {loading ? "Posting..." : "Create Post"}
+          </button>
+
+        </form>
+
+      </div>
 
     </div>
   );
