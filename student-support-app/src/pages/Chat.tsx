@@ -123,7 +123,7 @@ export default function Chat() {
 
   }, [chatId]);
 
-  // SEND
+  // SEND MESSAGE
   const sendMessage = async () => {
 
     const user = auth.currentUser;
@@ -148,11 +148,13 @@ export default function Chat() {
 
   };
 
+  // DELETE MESSAGE
   const unsendMessage = async (id: string) => {
     if (!chatId) return;
     await deleteDoc(doc(db, "chats", chatId, "messages", id));
   };
 
+  // EDIT MESSAGE
   const editMessage = async (msg: any) => {
     const newText = prompt("Edit message", msg.text);
     if (!newText) return;
@@ -165,7 +167,10 @@ export default function Chat() {
 
   return (
 
-    <div className="h-screen bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4] flex flex-col">
+    <div
+      className="h-screen bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4] flex flex-col"
+      onClick={() => setMenuOpen(null)} // ✅ close menu when clicking outside
+    >
 
       {/* HEADER */}
       <div className="glass-effect px-6 py-4 shadow-sm font-semibold text-lg">
@@ -194,26 +199,33 @@ export default function Chat() {
 
               {isMe && (
 
-                <div className="absolute top-1 right-2 opacity-0 group-hover:opacity-100">
+                <div className="absolute top-1 right-2 opacity-0 group-hover:opacity-100 z-50">
 
+                  {/* 3 DOT BUTTON */}
                   <button
-                    onClick={() =>
-                      setMenuOpen(menuOpen === msg.id ? null : msg.id)
-                    }
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMenuOpen(menuOpen === msg.id ? null : msg.id);
+                    }}
+                    className="text-white hover:text-gray-200 text-lg"
                   >
                     ⋮
                   </button>
 
+                  {/* DROPDOWN MENU */}
                   {menuOpen === msg.id && (
 
-                    <div className="bg-white rounded-lg shadow absolute right-0 mt-1 text-sm">
+                    <div
+                      onClick={(e) => e.stopPropagation()}
+                      className="absolute right-0 mt-2 bg-white shadow-xl rounded-xl w-32 border z-50"
+                    >
 
                       <button
                         onClick={() => {
                           editMessage(msg);
                           setMenuOpen(null);
                         }}
-                        className="block px-3 py-1 hover:bg-gray-100 w-full text-left"
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-t-xl"
                       >
                         Edit
                       </button>
@@ -223,7 +235,7 @@ export default function Chat() {
                           unsendMessage(msg.id);
                           setMenuOpen(null);
                         }}
-                        className="block px-3 py-1 hover:bg-gray-100 w-full text-left"
+                        className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-100 rounded-b-xl"
                       >
                         Unsend
                       </button>
@@ -268,4 +280,4 @@ export default function Chat() {
     </div>
 
   );
-}
+} 

@@ -32,7 +32,6 @@ export default function Register() {
     }
 
     try {
-
       setLoading(true);
 
       const userCredential = await createUserWithEmailAndPassword(
@@ -63,7 +62,6 @@ export default function Register() {
       }, 2000);
 
     } catch (err: any) {
-
       if (err.code === "auth/email-already-in-use") {
         setError("Email already registered.");
       } else if (err.code === "auth/weak-password") {
@@ -71,22 +69,20 @@ export default function Register() {
       } else {
         setError("Registration failed. Try again.");
       }
-
     }
 
     setLoading(false);
   };
 
   return (
-
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4] px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4]">
 
       <form
         onSubmit={handleRegister}
-        className="glass-effect p-8 rounded-2xl shadow w-full max-w-md space-y-5"
+        className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md"
       >
 
-        <h2 className="text-center text-2xl font-bold gradient-text">
+        <h2 className="text-2xl font-bold text-center text-purple-600 mb-6">
           ✨ Create Account
         </h2>
 
@@ -94,9 +90,9 @@ export default function Register() {
         <input
           type="text"
           placeholder="Full Name"
-          className="w-full p-3 rounded-lg border outline-none focus:ring-2 focus:ring-indigo-300"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          className="w-full p-3 mb-4 border rounded-lg outline-none focus:ring-2 focus:ring-purple-300"
           required
         />
 
@@ -104,9 +100,9 @@ export default function Register() {
         <input
           type="email"
           placeholder="University Email"
-          className="w-full p-3 rounded-lg border outline-none focus:ring-2 focus:ring-indigo-300"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          className="w-full p-3 mb-4 border rounded-lg outline-none focus:ring-2 focus:ring-purple-300"
           required
         />
 
@@ -114,30 +110,41 @@ export default function Register() {
         <input
           type="password"
           placeholder="Password"
-          className="w-full p-3 rounded-lg border outline-none focus:ring-2 focus:ring-indigo-300"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          className="w-full p-3 mb-4 border rounded-lg outline-none focus:ring-2 focus:ring-purple-300"
           required
         />
 
         {/* ERROR */}
         {error && (
-          <p className="text-red-500 text-sm text-center">{error}</p>
+          <p className="text-red-500 text-sm text-center mb-3">{error}</p>
         )}
 
         {/* SUCCESS */}
         {success && (
-          <p className="text-green-600 text-sm text-center">{success}</p>
+          <p className="text-green-600 text-sm text-center mb-3">{success}</p>
         )}
 
         {/* BUTTON */}
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-indigo-500 text-white py-3 rounded-xl font-semibold hover:bg-indigo-600 transition"
+          className="w-full bg-purple-500 text-white py-3 rounded-lg hover:bg-purple-600 transition"
         >
           {loading ? "Creating..." : "Register"}
         </button>
+
+        {/* LOGIN LINK */}
+        <p className="text-center text-sm text-gray-500 mt-4">
+          Already have an account?{" "}
+          <span
+            onClick={() => navigate("/login")}
+            className="text-purple-600 cursor-pointer hover:underline"
+          >
+            Login
+          </span>
+        </p>
 
       </form>
 

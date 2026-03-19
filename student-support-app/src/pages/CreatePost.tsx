@@ -16,7 +16,7 @@ export default function CreatePost() {
 
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
-  const [category, setCategory] = useState("Accommodation");
+  const [category, setCategory] = useState("Accommodation"); 
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -60,7 +60,7 @@ export default function CreatePost() {
         userName: userData?.name || "User"
       });
 
-      navigate("/posts");
+      navigate("/home");
 
     } catch (error) {
       console.error("Error creating post:", error);

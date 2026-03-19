@@ -10,7 +10,6 @@ import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
 
 import CreateSupport from "./pages/CreateSupport";
-import Posts from "./pages/Posts";
 import CreatePost from "./pages/CreatePost";
 import PostPage from "./pages/PostPage";
 
@@ -79,14 +78,6 @@ export default function App() {
         }
       />
 
-      <Route
-        path="/posts"
-        element={
-          <ProtectedRoute>
-            <Posts />
-          </ProtectedRoute>
-        }
-      />
 
       <Route
         path="/create-post"
