@@ -2,56 +2,66 @@ import { Link } from "react-router-dom";
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-start pt-10 
-      bg-gradient-to-b from-[#FAF8F6] to-[#F1ECE7] text-[#4A4A4A] px-4">
+    <div className="min-h-screen flex flex-col items-center justify-start pt-12 px-4
+      bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4] text-gray-800">
 
       {/* Logo */}
       <img
         src="/homeaway-logo.png"
-        alt="HomeAway"
-        className="w-[420px] md:w-[480px] lg:w-[520px] mb-12 drop-shadow-sm"
+        alt="HomeAway Logo"
+        className="w-[300px] sm:w-[380px] md:w-[460px] mb-10 drop-shadow-md"
       />
 
-      {/* Image Row */}
-      <div className="flex gap-12 mb-12">
+      {/* Tagline */}
+      <p className="text-lg text-gray-600 mb-10 text-center max-w-xl">
+        A safe space for international students to connect, share, and support each other 💜
+      </p>
+
+      {/* Images */}
+      <div className="flex flex-wrap justify-center gap-8 mb-12">
+
         <img
           src="/students1.jpg"
-          className="w-56 h-56 md:w-60 md:h-60 rounded-xl object-cover 
-          shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:scale-105 transition"
+          alt="Students"
+          className="w-44 h-44 sm:w-52 sm:h-52 rounded-2xl object-cover 
+          shadow-md hover:scale-105 transition"
         />
 
         <img
           src="/students2.jpg"
-          className="w-56 h-56 md:w-60 md:h-60 rounded-xl object-cover 
-          shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:scale-105 transition -translate-y-1"
+          alt="Students"
+          className="w-44 h-44 sm:w-52 sm:h-52 rounded-2xl object-cover 
+          shadow-md hover:scale-105 transition -translate-y-2"
         />
 
         <img
           src="/students3.jpg"
-          className="w-56 h-56 md:w-60 md:h-60 rounded-xl object-cover 
-          shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:scale-105 transition"
+          alt="Students"
+          className="w-44 h-44 sm:w-52 sm:h-52 rounded-2xl object-cover 
+          shadow-md hover:scale-105 transition"
         />
+
       </div>
 
       {/* Buttons */}
-      <div className="flex gap-6">
+      <div className="flex flex-col sm:flex-row gap-4">
+
         <Link
           to="/login"
-          className="px-10 py-3 bg-[#E8E2DC] hover:bg-[#DED7D0] 
-          text-[#4A4A4A] rounded-xl text-lg font-medium shadow 
-          transition"
+          className="px-8 py-3 bg-purple-500 text-white rounded-xl text-lg 
+          font-medium shadow hover:bg-purple-600 transition text-center"
         >
           Login
         </Link>
 
         <Link
           to="/signup"
-          className="px-10 py-3 bg-[#E8E2DC] hover:bg-[#DED7D0] 
-          text-[#4A4A4A] rounded-xl text-lg font-medium shadow 
-          transition"
+          className="px-8 py-3 bg-white text-purple-500 border border-purple-200 
+          rounded-xl text-lg font-medium shadow hover:bg-purple-50 transition text-center"
         >
           Register
         </Link>
+
       </div>
 
     </div>

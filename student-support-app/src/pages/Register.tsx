@@ -18,66 +18,60 @@ export default function Register() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+const handleRegister = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError("");
+  setSuccess("");
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
+  const normalizedEmail = email.toLowerCase();
 
-    const normalizedEmail = email.toLowerCase();
+  if (
+    !normalizedEmail.endsWith("@leedsbeckett.ac.uk") &&
+    !normalizedEmail.endsWith("@student.leedsbeckett.ac.uk")
+  ) {
+    setError("Only Leeds Beckett University student emails are allowed.");
+    return;
+  }
 
-    // ✅ Restrict to university emails
-    if (
-      !normalizedEmail.endsWith("@leedsbeckett.ac.uk") &&
-      !normalizedEmail.endsWith("@student.leedsbeckett.ac.uk")
-    ) {
-      setError("Only Leeds Beckett University student emails are allowed.");
-      return;
+  try {
+    setLoading(true); // ✅ FIXED
+
+    const userCredential = await createUserWithEmailAndPassword(
+      auth,
+      normalizedEmail,
+      password
+    );
+
+    const user = userCredential.user;
+
+    await sendEmailVerification(user, {
+      url: "https://homeaway-ab63f.web.app/verify-email",
+    });
+
+    await setDoc(doc(db, "users", user.uid), {
+      name,
+      email: normalizedEmail,
+      createdAt: new Date(),
+    });
+
+    await signOut(auth);
+
+    setSuccess("Verification email sent!");
+
+    navigate("/check-email");
+
+  } catch (err: any) {
+    if (err.code === "auth/email-already-in-use") {
+      setError("Email already registered.");
+    } else if (err.code === "auth/weak-password") {
+      setError("Password should be at least 6 characters.");
+    } else {
+      setError(err.message);
     }
+  }
 
-    try {
-      setLoading( );
-
-      // ✅ Create user
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        normalizedEmail,
-        password
-      );
-
-      const user = userCredential.user;
-
-      // 🔥 UPDATED VERIFICATION (IMPORTANT CHANGE)
-     await sendEmailVerification(user, {
-       url: "https://homeaway-ab63f.web.app/verify-email",
-       });
-       
-      // ✅ Save user in Firestore
-      await setDoc(doc(db, "users", user.uid), {
-        name,
-        email: normalizedEmail,
-        createdAt: new Date(),
-      });
-
-      // ✅ Force logout until verified
-      await signOut(auth);
-
-      setSuccess("Verification email sent! Please verify before logging in.");
-
-      navigate("/check-email");
-
-    } catch (err: any) {
-      if (err.code === "auth/email-already-in-use") {
-        setError("Email already registered.");
-      } else if (err.code === "auth/weak-password") {
-        setError("Password should be at least 6 characters.");
-      } else {
-        setError(err.message);
-      }
-    }
-
-    setLoading(false);
-  };
+  setLoading(false);
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4]">

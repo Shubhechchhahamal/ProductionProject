@@ -42,7 +42,7 @@ export default function Chat() {
       const currentUser = auth.currentUser;
       if (!currentUser) return;
 
-      const otherUserId = chatData.participants.find(
+      const otherUserId = chatData.participants?.find(
         (uid: string) => uid !== currentUser.uid
       );
 
@@ -74,8 +74,8 @@ export default function Chat() {
 
       const list: any[] = [];
 
-      snapshot.forEach((doc) => {
-        list.push({ id: doc.id, ...doc.data() });
+      snapshot.forEach((docItem) => {
+        list.push({ id: docItem.id, ...docItem.data() });
       });
 
       setMessages(list);
@@ -106,16 +106,16 @@ export default function Chat() {
 
       const snap = await getDocs(q);
 
-      snap.forEach(async (docItem) => {
+      for (const docItem of snap.docs) {
         const data: any = docItem.data();
 
         if (data.senderId !== user.uid) {
           await updateDoc(
-            doc(db, "chats", chatId, "messages", docItem.id),
+            doc(db, "chats", chatId!, "messages", docItem.id),
             { read: true }
           );
         }
-      });
+      }
 
     };
 
@@ -151,33 +151,31 @@ export default function Chat() {
   // DELETE MESSAGE
   const unsendMessage = async (id: string) => {
     if (!chatId) return;
-    await deleteDoc(doc(db, "chats", chatId, "messages", id));
+    await deleteDoc(doc(db, "chats", chatId!, "messages", id));
   };
 
   // EDIT MESSAGE
   const editMessage = async (msg: any) => {
+    if (!chatId) return;
+
     const newText = prompt("Edit message", msg.text);
     if (!newText) return;
 
     await updateDoc(
-      doc(db, "chats", chatId, "messages", msg.id),
+      doc(db, "chats", chatId!, "messages", msg.id),
       { text: newText }
     );
   };
 
   return (
-
-    <div
-      className="h-screen bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4] flex flex-col"
-      onClick={() => setMenuOpen(null)} // ✅ close menu when clicking outside
+    <div className="h-screen bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4] flex flex-col"
+      onClick={() => setMenuOpen(null)}
     >
 
-      {/* HEADER */}
       <div className="glass-effect px-6 py-4 shadow-sm font-semibold text-lg">
         💬 {otherUserName || "Chat"}
       </div>
 
-      {/* MESSAGES */}
       <div className="flex-1 overflow-y-auto p-6 space-y-3">
 
         {messages.map((msg) => {
@@ -185,7 +183,6 @@ export default function Chat() {
           const isMe = msg.senderId === auth.currentUser?.uid;
 
           return (
-
             <div
               key={msg.id}
               className={`max-w-xs p-3 rounded-2xl relative group ${
@@ -198,23 +195,19 @@ export default function Chat() {
               {msg.text}
 
               {isMe && (
-
                 <div className="absolute top-1 right-2 opacity-0 group-hover:opacity-100 z-50">
 
-                  {/* 3 DOT BUTTON */}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       setMenuOpen(menuOpen === msg.id ? null : msg.id);
                     }}
-                    className="text-white hover:text-gray-200 text-lg"
+                    className="text-white text-lg"
                   >
                     ⋮
                   </button>
 
-                  {/* DROPDOWN MENU */}
                   {menuOpen === msg.id && (
-
                     <div
                       onClick={(e) => e.stopPropagation()}
                       className="absolute right-0 mt-2 bg-white shadow-xl rounded-xl w-32 border z-50"
@@ -225,7 +218,7 @@ export default function Chat() {
                           editMessage(msg);
                           setMenuOpen(null);
                         }}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-t-xl"
+                        className="w-full px-4 py-2 text-sm hover:bg-gray-100"
                       >
                         Edit
                       </button>
@@ -235,30 +228,22 @@ export default function Chat() {
                           unsendMessage(msg.id);
                           setMenuOpen(null);
                         }}
-                        className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-100 rounded-b-xl"
+                        className="w-full px-4 py-2 text-sm text-red-500 hover:bg-gray-100"
                       >
                         Unsend
                       </button>
 
                     </div>
-
                   )}
-
                 </div>
-
               )}
-
             </div>
-
           );
-
         })}
 
         <div ref={bottomRef}></div>
-
       </div>
 
-      {/* INPUT */}
       <div className="glass-effect p-4 flex gap-3">
 
         <input
@@ -270,14 +255,12 @@ export default function Chat() {
 
         <button
           onClick={sendMessage}
-          className="bg-indigo-500 text-white px-5 rounded-lg hover:bg-indigo-600 transition"
+          className="bg-indigo-500 text-white px-5 rounded-lg"
         >
           Send
         </button>
 
       </div>
-
     </div>
-
   );
-} 
+}
