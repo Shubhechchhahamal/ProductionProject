@@ -55,29 +55,52 @@ export default function Students() {
 
   const deleteUser = async (userId: string) => {
 
-    const confirmDelete = window.confirm("Are you sure you want to delete this user?");
+  const confirmDelete = window.confirm("Are you sure you want to delete this user completely?");
+  if (!confirmDelete) return;
 
-    if (!confirmDelete) return;
+  try {
 
-    try {
+    // 🔥 DELETE USER POSTS + REPLIES
+    const postsSnap = await getDocs(collection(db, "posts"));
 
-      await deleteDoc(doc(db, "users", userId));
+    for (const postDoc of postsSnap.docs) {
 
-      // update UI
-      setStudents((prev) => prev.filter((user) => user.id !== userId));
+      const postData: any = postDoc.data();
 
-      alert("User deleted successfully");
+      if (postData.userId === userId) {
 
-    } catch (error) {
+        // DELETE REPLIES
+        const repliesSnap = await getDocs(
+          collection(db, "posts", postDoc.id, "replies")
+        );
 
-      console.error("Error deleting user:", error);
-      alert("Failed to delete user");
+        for (const replyDoc of repliesSnap.docs) {
+          await deleteDoc(
+            doc(db, "posts", postDoc.id, "replies", replyDoc.id)
+          );
+        }
 
+        // DELETE POST
+        await deleteDoc(doc(db, "posts", postDoc.id));
+      }
     }
 
-  };
+    // 🔥 DELETE USER DOCUMENT
+    await deleteDoc(doc(db, "users", userId));
 
+    // UPDATE UI
+    setStudents((prev) => prev.filter((user) => user.id !== userId));
 
+    alert("User and all their data deleted successfully");
+
+  } catch (error) {
+
+    console.error("Error deleting user:", error);
+    alert("Failed to delete user");
+
+  }
+
+};
   const filteredStudents = students.filter((student) => {
 
     const query = search.toLowerCase().trim();

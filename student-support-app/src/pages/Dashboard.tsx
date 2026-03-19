@@ -24,6 +24,9 @@ export default function Dashboard() {
 
   const navigate = useNavigate();
 
+  const isAdmin =
+    auth.currentUser?.email === "s.hamal2465@student.leedsbeckett.ac.uk";
+
   // ✅ LOAD USER NAME
   useEffect(() => {
     const loadUser = async () => {
@@ -196,6 +199,16 @@ export default function Dashboard() {
             )}
           </div>
 
+          {/* 🔥 ADMIN BUTTON */}
+          {isAdmin && (
+            <button
+              onClick={() => navigate("/students")}
+              className="px-3 py-1 rounded-lg hover:bg-purple-100 text-purple-600 font-medium"
+            >
+              👥 Students
+            </button>
+          )}
+
           <Link to="/create-post">➕ Post</Link>
 
           {/* Profile */}
@@ -278,4 +291,4 @@ export default function Dashboard() {
 
     </div>
   );
-}
+}ect doeectdoe
