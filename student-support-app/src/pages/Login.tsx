@@ -41,8 +41,8 @@ export default function Login() {
       // 🔥 VERY IMPORTANT: reload user from Firebase
       await user.reload();
 
-      // ❗ BLOCK unverified users
-      if (!auth.currentUser?.emailVerified) {
+      // ❗ BLOCK unverified users (FIXED HERE)
+      if (!user.emailVerified) {
         await signOut(auth);
         setError("Please verify your email before logging in.");
         setLoading(false);

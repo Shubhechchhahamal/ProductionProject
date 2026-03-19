@@ -5,7 +5,14 @@ import {
   signOut
 } from "firebase/auth";
 import { auth, db } from "../firebase";
-import { setDoc, doc } from "firebase/firestore";
+import {
+  setDoc,
+  doc,
+  collection,
+  getDocs,
+  query,
+  where
+} from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 
 export default function Register() {
@@ -18,60 +25,84 @@ export default function Register() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
-const handleRegister = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setError("");
-  setSuccess("");
 
-  const normalizedEmail = email.toLowerCase();
+  // ✅ CHECK IF USER ALREADY EXISTS IN FIRESTORE
+  const checkExistingUser = async (email: string) => {
+    const q = query(collection(db, "users"), where("email", "==", email));
+    const snap = await getDocs(q);
+    return !snap.empty;
+  };
 
-  if (
-    !normalizedEmail.endsWith("@leedsbeckett.ac.uk") &&
-    !normalizedEmail.endsWith("@student.leedsbeckett.ac.uk")
-  ) {
-    setError("Only Leeds Beckett University student emails are allowed.");
-    return;
-  }
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
 
-  try {
-    setLoading(true); // ✅ FIXED
+    const normalizedEmail = email.toLowerCase();
 
-    const userCredential = await createUserWithEmailAndPassword(
-      auth,
-      normalizedEmail,
-      password
-    );
-
-    const user = userCredential.user;
-
-    await sendEmailVerification(user, {
-      url: "https://homeaway-ab63f.web.app/verify-email",
-    });
-
-    await setDoc(doc(db, "users", user.uid), {
-      name,
-      email: normalizedEmail,
-      createdAt: new Date(),
-    });
-
-    await signOut(auth);
-
-    setSuccess("Verification email sent!");
-
-    navigate("/check-email");
-
-  } catch (err: any) {
-    if (err.code === "auth/email-already-in-use") {
-      setError("Email already registered.");
-    } else if (err.code === "auth/weak-password") {
-      setError("Password should be at least 6 characters.");
-    } else {
-      setError(err.message);
+    // ✅ Email restriction
+    if (
+      !normalizedEmail.endsWith("@leedsbeckett.ac.uk") &&
+      !normalizedEmail.endsWith("@student.leedsbeckett.ac.uk")
+    ) {
+      setError("Only Leeds Beckett University student emails are allowed.");
+      return;
     }
-  }
 
-  setLoading(false);
-};
+    try {
+      setLoading(true);
+
+      // 🔥 CHECK FIRESTORE FIRST
+      const exists = await checkExistingUser(normalizedEmail);
+
+      if (exists) {
+        setError("User already exists. Please login.");
+        setLoading(false);
+        return;
+      }
+
+      // 🔥 CREATE USER IN AUTH
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        normalizedEmail,
+        password
+      );
+
+      const user = userCredential.user;
+
+      // ✅ SEND VERIFICATION EMAIL
+      await sendEmailVerification(user, {
+        url: "https://homeaway-ab63f.web.app/verify-email",
+      });
+
+      // ✅ SAVE USER IN FIRESTORE (WITH EMAIL)
+      await setDoc(doc(db, "users", user.uid), {
+        name,
+        email: normalizedEmail,
+        createdAt: new Date(),
+      });
+
+      // ✅ SIGN OUT UNTIL VERIFIED
+      await signOut(auth);
+
+      setSuccess("Verification email sent!");
+
+      navigate("/check-email");
+
+    } catch (err: any) {
+
+      if (err.code === "auth/email-already-in-use") {
+        setError("Email already registered.");
+      } else if (err.code === "auth/weak-password") {
+        setError("Password should be at least 6 characters.");
+      } else {
+        setError(err.message);
+      }
+
+    }
+
+    setLoading(false);
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4]">
@@ -149,4 +180,4 @@ const handleRegister = async (e: React.FormEvent) => {
 
     </div>
   );
-} 
+}

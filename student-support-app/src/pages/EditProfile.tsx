@@ -14,10 +14,14 @@ export default function EditProfile() {
   const [yearsInUK, setYearsInUK] = useState("");
   const [helpOffer, setHelpOffer] = useState("");
 
+  // ✅ LOAD USER DATA
   useEffect(() => {
     const load = async () => {
       const user = auth.currentUser;
-      if (!user) return;
+      if (!user) {
+        navigate("/login"); // safety
+        return;
+      }
 
       const ref = doc(db, "users", user.uid);
       const snap = await getDoc(ref);
@@ -37,19 +41,27 @@ export default function EditProfile() {
     load();
   }, []);
 
+  // ✅ SAVE PROFILE
   const handleSave = async () => {
     const user = auth.currentUser;
     if (!user) return;
 
-    await updateDoc(doc(db, "users", user.uid), {
-      name,
-      country,
-      languages,
-      yearsInUK,
-      helpOffer,
-    });
+    try {
+      await updateDoc(doc(db, "users", user.uid), {
+        name,
+        country,
+        languages,
+        yearsInUK,
+        helpOffer,
+      });
 
-    navigate("/profile");
+      // ✅ GO BACK TO PROFILE WITH UID
+      navigate(`/profile/${user.uid}`);
+
+    } catch (error) {
+      console.error("Update error:", error);
+      alert("Failed to update profile");
+    }
   };
 
   // 🔥 LOADING UI
@@ -61,6 +73,8 @@ export default function EditProfile() {
     );
   }
 
+  const currentUser = auth.currentUser;
+
   return (
 
     <div className="min-h-screen bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4] p-6">
@@ -70,7 +84,13 @@ export default function EditProfile() {
         {/* BACK */}
         <button
           className="mb-6 text-indigo-500 hover:underline"
-          onClick={() => navigate("/profile")}
+          onClick={() => {
+            if (currentUser) {
+              navigate(`/profile/${currentUser.uid}`);
+            } else {
+              navigate("/home"); // fallback
+            }
+          }}
         >
           ← Back to Profile
         </button>
