@@ -12,11 +12,13 @@ import EditProfile from "./pages/EditProfile";
 import CreateSupport from "./pages/CreateSupport";
 import CreatePost from "./pages/CreatePost";
 import PostPage from "./pages/PostPage";
+import CheckEmail from "./pages/CheckEmail";
 
 import Inbox from "./pages/Inbox";
 import Chat from "./pages/Chat";
 import Students from "./pages/Students";
 import Notifications from "./pages/Notifications";
+import VerifyEmail from "./pages/VerifyEmail";
 
 import ProtectedRoute from "./ProtectedRoute";
 
@@ -24,15 +26,19 @@ export default function App() {
   return (
     <Routes>
 
-      {/* Public Pages */}
+      {/* ✅ PUBLIC ROUTES */}
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Register />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/students" element={<Students />} />
       <Route path="/notifications" element={<Notifications />} />
+      <Route path="/check-email" element={<CheckEmail />} />
 
-      {/* Protected Pages */}
+      {/* 🔥 NEW: EMAIL VERIFICATION ROUTE */}
+      <Route path="/verify-email" element={<VerifyEmail />} />
+
+      {/* ✅ PROTECTED ROUTES */}
       <Route
         path="/home"
         element={
@@ -77,7 +83,6 @@ export default function App() {
           </ProtectedRoute>
         }
       />
-
 
       <Route
         path="/create-post"

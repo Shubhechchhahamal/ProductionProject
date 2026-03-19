@@ -1,5 +1,8 @@
 import { useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import {
+  signInWithEmailAndPassword,
+  signOut
+} from "firebase/auth";
 import { auth } from "../firebase";
 import { useNavigate } from "react-router-dom";
 
@@ -10,32 +13,56 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    // ✅ Email validation
-    if (
-      !email.endsWith("@leedsbeckett.ac.uk") &&
-      !email.endsWith("@student.leedsbeckett.ac.uk")
-    ) {
-      setError("Please use your Leeds Beckett University email.");
+    const normalizedEmail = email.toLowerCase();
+
+    // ✅ Restrict to student emails ONLY (better)
+    if (!normalizedEmail.endsWith("@student.leedsbeckett.ac.uk")) {
+      setError("Only Leeds Beckett student emails are allowed.");
       return;
     }
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      setLoading(true);
+
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        normalizedEmail,
+        password
+      );
+
+      const user = userCredential.user;
+
+      // 🔥 VERY IMPORTANT: reload user from Firebase
+      await user.reload();
+
+      // ❗ BLOCK unverified users
+      if (!auth.currentUser?.emailVerified) {
+        await signOut(auth);
+        setError("Please verify your email before logging in.");
+        setLoading(false);
+        return;
+      }
+
+      // ✅ Success
       navigate("/home");
+
     } catch (err: any) {
       if (err.code === "auth/wrong-password") {
         setError("Incorrect password.");
       } else if (err.code === "auth/user-not-found") {
         setError("No account found.");
       } else {
-        setError("Login failed. Try again.");
+        setError(err.message);
       }
     }
+
+    setLoading(false);
   };
 
   return (
@@ -57,6 +84,7 @@ export default function Login() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="w-full p-3 mb-4 border rounded-lg outline-none focus:ring-2 focus:ring-purple-300"
+          required
         />
 
         {/* PASSWORD */}
@@ -66,6 +94,7 @@ export default function Login() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="w-full p-3 mb-4 border rounded-lg outline-none focus:ring-2 focus:ring-purple-300"
+          required
         />
 
         {/* ERROR MESSAGE */}
@@ -78,9 +107,10 @@ export default function Login() {
         {/* BUTTON */}
         <button
           type="submit"
+          disabled={loading}
           className="w-full bg-purple-500 text-white py-3 rounded-lg hover:bg-purple-600 transition"
         >
-          Login
+          {loading ? "Logging in..." : "Login"}
         </button>
 
         {/* REGISTER LINK */}

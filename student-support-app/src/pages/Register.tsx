@@ -1,10 +1,11 @@
 import { useState } from "react";
 import {
   createUserWithEmailAndPassword,
-  sendEmailVerification
+  sendEmailVerification,
+  signOut
 } from "firebase/auth";
 import { auth, db } from "../firebase";
-import { setDoc, doc, getDoc } from "firebase/firestore";
+import { setDoc, doc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 
 export default function Register() {
@@ -23,43 +24,47 @@ export default function Register() {
     setError("");
     setSuccess("");
 
+    const normalizedEmail = email.toLowerCase();
+
+    // ✅ Restrict to university emails
     if (
-      !email.endsWith("@leedsbeckett.ac.uk") &&
-      !email.endsWith("@student.leedsbeckett.ac.uk")
+      !normalizedEmail.endsWith("@leedsbeckett.ac.uk") &&
+      !normalizedEmail.endsWith("@student.leedsbeckett.ac.uk")
     ) {
       setError("Only Leeds Beckett University student emails are allowed.");
       return;
     }
 
     try {
-      setLoading(true);
+      setLoading( );
 
+      // ✅ Create user
       const userCredential = await createUserWithEmailAndPassword(
         auth,
-        email,
+        normalizedEmail,
         password
       );
 
       const user = userCredential.user;
 
-      await sendEmailVerification(user);
+      // 🔥 UPDATED VERIFICATION (IMPORTANT CHANGE)
+     await sendEmailVerification(user, {
+       url: "https://homeaway-ab63f.web.app/verify-email",
+       });
+       
+      // ✅ Save user in Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        name,
+        email: normalizedEmail,
+        createdAt: new Date(),
+      });
 
-      const userRef = doc(db, "users", user.uid);
-      const existingUser = await getDoc(userRef);
+      // ✅ Force logout until verified
+      await signOut(auth);
 
-      if (!existingUser.exists()) {
-        await setDoc(userRef, {
-          name,
-          email,
-          createdAt: new Date().toISOString(),
-        });
-      }
+      setSuccess("Verification email sent! Please verify before logging in.");
 
-      setSuccess("Verification email sent! Please check your inbox.");
-
-      setTimeout(() => {
-        navigate("/login");
-      }, 2000);
+      navigate("/check-email");
 
     } catch (err: any) {
       if (err.code === "auth/email-already-in-use") {
@@ -67,7 +72,7 @@ export default function Register() {
       } else if (err.code === "auth/weak-password") {
         setError("Password should be at least 6 characters.");
       } else {
-        setError("Registration failed. Try again.");
+        setError(err.message);
       }
     }
 
@@ -150,4 +155,4 @@ export default function Register() {
 
     </div>
   );
-}
+} 
