@@ -11,9 +11,10 @@ import {
   collection,
   getDocs,
   query,
-  where
-} from "firebase/firestore";
-import { useNavigate } from "react-router-dom";
+  where,
+ serverTimestamp   // ✅ ADD THIS HERE
+ } from "firebase/firestore";
+ import { useNavigate } from "react-router-dom";
 
 export default function Register() {
 
@@ -75,12 +76,17 @@ export default function Register() {
         url: "https://homeaway-ab63f.web.app/verify-email",
       });
 
-      // ✅ SAVE USER IN FIRESTORE (WITH EMAIL)
+     
+
       await setDoc(doc(db, "users", user.uid), {
-        name,
-        email: normalizedEmail,
-        createdAt: new Date(),
-      });
+      name,
+      email: normalizedEmail,
+      createdAt: serverTimestamp(),
+
+  // 🟢 NEW FIELDS (IMPORTANT)
+  isOnline: true,
+  lastActive: serverTimestamp(),
+});
 
       // ✅ SIGN OUT UNTIL VERIFIED
       await signOut(auth);
@@ -121,7 +127,7 @@ export default function Register() {
           type="text"
           placeholder="Full Name"
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(e) => setName(e.target.value)} 
           className="w-full p-3 mb-4 border rounded-lg outline-none focus:ring-2 focus:ring-purple-300"
           required
         />
