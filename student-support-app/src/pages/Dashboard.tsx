@@ -1,47 +1,20 @@
 import { useEffect, useState } from "react";
-import { db, auth } from "../firebase";
+import { db } from "../firebase";
 import {
   collection,
   query,
   orderBy,
-  onSnapshot,
-  where,
-  doc,
-  getDoc
+  onSnapshot
 } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
-import { signOut } from "firebase/auth";
 
 export default function Dashboard() {
   const [posts, setPosts] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
 
-  const [unreadMessages, setUnreadMessages] = useState(0);
-  const [unreadNotifications, setUnreadNotifications] = useState(0);
-
-  const [userName, setUserName] = useState("");
-
   const navigate = useNavigate();
 
-  const isAdmin =
-    auth.currentUser?.email === "s.hamal2465@student.leedsbeckett.ac.uk";
-
-  // LOAD USER NAME
-  useEffect(() => {
-    const loadUser = async () => {
-      const user = auth.currentUser;
-      if (!user) return;
-
-      const snap = await getDoc(doc(db, "users", user.uid));
-      const data = snap.data();
-
-      setUserName(data?.name || "User");
-    };
-
-    loadUser();
-  }, []);
-
-  // LOAD POSTS (REAL-TIME)
+  // ✅ LOAD POSTS (REAL-TIME)
   useEffect(() => {
     const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
 
@@ -54,75 +27,6 @@ export default function Dashboard() {
     });
 
     return () => unsubscribe();
-  }, []);
-
-  // MESSAGES COUNT
-  useEffect(() => {
-    const user = auth.currentUser;
-    if (!user) return;
-
-    const chatsQuery = query(
-      collection(db, "chats"),
-      where("participants", "array-contains", user.uid)
-    );
-
-    let unsubscribes: any[] = [];
-    let counts: Record<string, number> = {};
-
-    const unsubscribeChats = onSnapshot(chatsQuery, (chatSnap) => {
-      unsubscribes.forEach((unsub) => unsub());
-      unsubscribes = [];
-      counts = {};
-
-      if (chatSnap.empty) {
-        setUnreadMessages(0);
-      }
-
-      chatSnap.forEach((chatDoc) => {
-        const messagesRef = collection(db, "chats", chatDoc.id, "messages");
-
-        const unreadQuery = query(messagesRef, where("read", "==", false));
-
-        const unsub = onSnapshot(unreadQuery, (snap) => {
-          let count = 0;
-
-          snap.forEach((doc) => {
-            const data = doc.data();
-            if (data.senderId !== user.uid) count++;
-          });
-
-          counts[chatDoc.id] = count;
-
-          const total = Object.values(counts).reduce((a, b) => a + b, 0);
-          setUnreadMessages(total);
-        });
-
-        unsubscribes.push(unsub);
-      });
-    });
-
-    return () => {
-      unsubscribeChats();
-      unsubscribes.forEach((unsub) => unsub());
-    };
-  }, []);
-
-  // NOTIFICATIONS (REAL-TIME)
-  useEffect(() => {
-    const user = auth.currentUser;
-    if (!user) return;
-
-    const notifQuery = query(
-      collection(db, "notifications"),
-      where("userId", "==", user.uid),
-      where("read", "==", false)
-    );
-
-    const unsubscribeNotif = onSnapshot(notifQuery, (snap) => {
-      setUnreadNotifications(snap.size);
-    });
-
-    return () => unsubscribeNotif();
   }, []);
 
   const filteredPosts =
@@ -160,7 +64,7 @@ export default function Dashboard() {
           <button
             key={cat}
             onClick={() => setSelectedCategory(cat)}
-            className={`px-4 py-2 rounded-full border text-sm sm:text-base transition ${
+            className={`px-4 py-2 rounded-full border text-sm transition ${
               selectedCategory === cat
                 ? "bg-purple-500 text-white border-purple-500"
                 : "bg-white text-gray-600 border-gray-200 hover:border-purple-300"
@@ -206,71 +110,6 @@ export default function Dashboard() {
             No posts found in this category.
           </div>
         )}
-      </div>
-
-      {/* MOBILE BOTTOM NAV */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t shadow-[0_-2px_10px_rgba(0,0,0,0.06)] z-50">
-        <div className={`grid ${isAdmin ? "grid-cols-6" : "grid-cols-5"} h-16`}>
-          <button
-            onClick={() => navigate("/home")}
-            className="flex flex-col items-center justify-center text-[11px] text-gray-700"
-          >
-            <span className="text-lg">🏠</span>
-            <span>Home</span>
-          </button>
-
-          <button
-            onClick={() => navigate("/inbox")}
-            className="relative flex flex-col items-center justify-center text-[11px] text-gray-700"
-          >
-            <span className="text-lg">💬</span>
-            <span>Inbox</span>
-            {unreadMessages > 0 && (
-              <span className="absolute top-1 right-4 min-w-[18px] h-[18px] flex items-center justify-center bg-red-500 text-white text-[9px] px-1 rounded-full">
-                {unreadMessages}
-              </span>
-            )}
-          </button>
-
-          <button
-            onClick={() => navigate("/notifications")}
-            className="relative flex flex-col items-center justify-center text-[11px] text-gray-700"
-          >
-            <span className="text-lg">🔔</span>
-            <span>Alerts</span>
-            {unreadNotifications > 0 && (
-              <span className="absolute top-1 right-4 min-w-[18px] h-[18px] flex items-center justify-center bg-red-500 text-white text-[9px] px-1 rounded-full">
-                {unreadNotifications}
-              </span>
-            )}
-          </button>
-
-          {isAdmin && (
-            <button
-              onClick={() => navigate("/students")}
-              className="flex flex-col items-center justify-center text-[11px] text-gray-700"
-            >
-              <span className="text-lg">👥</span>
-              <span>Students</span>
-            </button>
-          )}
-
-          <button
-            onClick={() => navigate("/create-post")}
-            className="flex flex-col items-center justify-center text-[11px] text-gray-700"
-          >
-            <span className="text-lg">➕</span>
-            <span>Post</span>
-          </button>
-
-          <button
-            onClick={() => navigate(`/profile/${auth.currentUser?.uid}`)}
-            className="flex flex-col items-center justify-center text-[11px] text-gray-700"
-          >
-            <span className="text-lg">👤</span>
-            <span>Profile</span>
-          </button>
-        </div>
       </div>
 
     </div>
