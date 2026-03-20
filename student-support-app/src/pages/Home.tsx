@@ -6,22 +6,37 @@ export default function Home() {
 
       {/* NAVBAR */}
       <div className="flex justify-between items-center px-6 py-4 shadow-sm sticky top-0 bg-white z-50">
+
         <h1 className="text-lg font-semibold text-purple-600">HomeAway</h1>
+
+        <div className="flex gap-6 items-center">
+          <a href="#features" className="text-gray-600 hover:text-purple-600 transition font-medium">
+            Features
+          </a>
+
+          <a href="#how-it-works" className="text-gray-600 hover:text-purple-600 transition font-medium">
+            How It Works
+          </a>
+
+          <Link
+            to="/signup"
+            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition"
+          >
+            Join Now
+          </Link>
+        </div>
+
       </div>
 
       {/* HERO */}
       <section className="min-h-screen flex flex-col items-center justify-center px-8 md:px-16 py-16 bg-gradient-to-br from-purple-50 to-blue-50">
 
-
-        {/* LOGO */}
         <img
           src="/homeaway-logo.png"
           className="h-28 w-28 mb-8 rounded-full object-cover border-2 border-white-200"
           alt="HomeAway logo"
         />
 
-
-        {/* TEXT */}
         <div className="max-w-xl text-center">
 
           <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-4">
@@ -33,26 +48,16 @@ export default function Home() {
             Connect with fellow international students for real advice on housing, jobs, culture, and everything in between 💜
           </p>
 
-          {/* BUTTONS */}
-          <div className="flex gap-4 justify-center">
-            <Link
-              to="/signup"
-              className="bg-purple-600 text-white px-6 py-3 rounded-xl shadow hover:scale-105 transition"
-            >
-              Get Started →
-            </Link>
-
             <Link
               to="/login"
-              className="border px-6 py-3 rounded-xl hover:bg-purple-50 transition"
+              className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition"
             >
               Login
             </Link>
           </div>
 
-        </div>
+        
 
-        {/* IMAGES */}
         <div className="mt-12 flex gap-4 justify-center">
           <img src="/students1.jpg" className="w-40 h-40 rounded-2xl shadow-md object-cover" />
           <img src="/students2.jpg" className="w-40 h-40 rounded-2xl shadow-md object-cover -translate-y-4" />
@@ -61,10 +66,8 @@ export default function Home() {
 
       </section>
 
- 
-
       {/* FEATURES */}
-      <section className="py-24 px-6 text-center">
+      <section id="features" className="py-24 px-6 text-center">
 
         <h2 className="text-4xl font-bold mb-4">
           Everything you need to settle in
@@ -106,7 +109,7 @@ export default function Home() {
             ))}
           </div>
 
-          {/* BOTTOM 2 (CENTERED) */}
+          {/* BOTTOM 2 */}
           <div className="flex justify-center gap-8">
             {[
               {
@@ -135,9 +138,8 @@ export default function Home() {
 
       </section>
 
-
       {/* HOW IT WORKS */}
-      <section className="py-24 bg-gray-50 text-center">
+      <section id="how-it-works" className="py-24 bg-gray-50 text-center">
 
         <p className="text-sm text-orange-500 mb-2">SIMPLE PROCESS</p>
 
@@ -157,7 +159,6 @@ export default function Home() {
               <p className="text-gray-500 mt-2">{step.desc}</p>
             </div>
           ))}
-
         </div>
 
       </section>
