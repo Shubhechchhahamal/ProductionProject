@@ -4,36 +4,38 @@ export default function Home() {
   return (
     <div className="bg-white text-gray-800">
 
-      {/* NAVBAR */}
-      <div className="flex justify-between items-center px-6 py-4 shadow-sm sticky top-0 bg-white z-50">
+      {/* 🔥 LANDING NAVBAR */}
+<div className="flex justify-between items-center px-6 py-4 shadow-sm sticky top-0 bg-white z-50">
 
-        <h1 className="text-lg font-semibold text-purple-600">HomeAway</h1>
+  <h1 className="text-xl font-bold text-purple-600">
+    HomeAway
+  </h1>
 
-        <div className="flex gap-6 items-center">
-          <a href="#features" className="text-gray-600 hover:text-purple-600 transition font-medium">
-            Features
-          </a>
+  <div className="flex gap-6 items-center">
+    <a href="#features" className="text-gray-600 hover:text-purple-600 font-medium">
+      Features
+    </a>
 
-          <a href="#how-it-works" className="text-gray-600 hover:text-purple-600 transition font-medium">
-            How It Works
-          </a>
+    <a href="#how-it-works" className="text-gray-600 hover:text-purple-600 font-medium">
+      How It Works
+    </a>
 
-          <Link
-            to="/signup"
-            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition"
-          >
-            Join Now
-          </Link>
-        </div>
+    <Link
+      to="/signup"
+      className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
+    >
+      Join Now
+    </Link>
+  </div>
 
-      </div>
+</div>
 
       {/* HERO */}
       <section className="min-h-screen flex flex-col items-center justify-center px-8 md:px-16 py-16 bg-gradient-to-br from-purple-50 to-blue-50">
 
         <img
           src="/homeaway-logo.png"
-          className="h-28 w-28 mb-8 rounded-full object-cover border-2 border-white-200"
+          className="h-28 w-28 mb-8 rounded-full object-cover"
           alt="HomeAway logo"
         />
 
@@ -48,20 +50,18 @@ export default function Home() {
             Connect with fellow international students for real advice on housing, jobs, culture, and everything in between 💜
           </p>
 
-            <Link
-              to="/login"
-              className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition"
-            >
-              Login
-            </Link>
-          </div>
+          <Link
+            to="/login"
+            className="bg-purple-600 text-white px-5 py-2 rounded-lg hover:bg-purple-700 transition"
+          >
+            Login
+          </Link>
+        </div>
 
-        
-
-        <div className="mt-12 flex gap-4 justify-center">
-          <img src="/students1.jpg" className="w-40 h-40 rounded-2xl shadow-md object-cover" />
-          <img src="/students2.jpg" className="w-40 h-40 rounded-2xl shadow-md object-cover -translate-y-4" />
-          <img src="/students3.jpg" className="w-40 h-40 rounded-2xl shadow-md object-cover" />
+        <div className="mt-12 flex gap-4 justify-center flex-wrap">
+          <img src="/students1.jpg" className="w-32 h-32 sm:w-40 sm:h-40 rounded-2xl shadow-md object-cover" />
+          <img src="/students2.jpg" className="w-32 h-32 sm:w-40 sm:h-40 rounded-2xl shadow-md object-cover -translate-y-4" />
+          <img src="/students3.jpg" className="w-32 h-32 sm:w-40 sm:h-40 rounded-2xl shadow-md object-cover" />
         </div>
 
       </section>
@@ -74,18 +74,17 @@ export default function Home() {
         </h2>
 
         <p className="text-gray-500 mb-12 max-w-2xl mx-auto">
-          From finding a flat to making friends — HomeAway helps you navigate life in the UK.
+          From finding a flat to making friends. HomeAway helps you navigate life in the UK.
         </p>
 
         <div className="max-w-5xl mx-auto">
 
-          {/* TOP 3 */}
           <div className="grid md:grid-cols-3 gap-8 mb-8">
             {[
               {
                 icon: "🛡️",
                 title: "Safe Space",
-                desc: "AI-powered moderation keeps conversations respectful and the community positive."
+                desc: "AI-powered moderation keeps conversations respectful and positive."
               },
               {
                 icon: "👤",
@@ -109,8 +108,7 @@ export default function Home() {
             ))}
           </div>
 
-          {/* BOTTOM 2 */}
-          <div className="flex justify-center gap-8">
+          <div className="flex justify-center gap-8 flex-wrap">
             {[
               {
                 icon: "💬",
@@ -149,9 +147,9 @@ export default function Home() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           {[
-            { num: "01", title: "Sign up", desc: "Use your university email to create your profile." },
-            { num: "02", title: "Explore", desc: "Browse topics or ask questions about student life." },
-            { num: "03", title: "Connect", desc: "Message students and build your support network." }
+            { num: "01", title: "Sign up", desc: "Use your university email." },
+            { num: "02", title: "Explore", desc: "Browse topics or ask questions." },
+            { num: "03", title: "Connect", desc: "Message students and build network." }
           ].map((step, i) => (
             <div key={i}>
               <div className="text-5xl text-gray-300 font-bold mb-2">{step.num}</div>
@@ -167,7 +165,7 @@ export default function Home() {
       <section className="py-20 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-center">
 
         <h2 className="text-3xl font-bold mb-4">
-          Ready to find your community in the UK?
+          Ready to find your community?
         </h2>
 
         <p className="mb-6">

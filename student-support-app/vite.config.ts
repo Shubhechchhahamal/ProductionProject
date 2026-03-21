@@ -18,24 +18,24 @@ export default defineConfig({
         short_name: "HomeAway",
         description: "Peer support platform for international students",
 
-        theme_color: "#a855f7",
+        theme_color: "#ffffff",
         background_color: "#ffffff",
 
         display: "standalone",
+        display_override: ["window-controls-overlay"], // ✅ THIS LINE FIXES IT
+
         start_url: "/",
 
         icons: [
           {
-            src: "/pwa-192x192.png",
+            src: "/pwa-192.png",
             sizes: "192x192",
-            type: "image/png",
-            purpose: "any"
+            type: "image/png"
           },
           {
-            src: "/pwa-512x512.png",
+            src: "/pwa-512.png",
             sizes: "512x512",
-            type: "image/png",
-            purpose: "any"
+            type: "image/png"
           }
         ]
       }
