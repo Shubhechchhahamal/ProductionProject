@@ -12,6 +12,8 @@ export default defineConfig({
       includeAssets: ["favicon.ico"],
 
       manifest: {
+        id: "/",
+
         name: "HomeAway",
         short_name: "HomeAway",
         description: "Peer support platform for international students",
@@ -26,12 +28,14 @@ export default defineConfig({
           {
             src: "/pwa-192x192.png",
             sizes: "192x192",
-            type: "image/png"
+            type: "image/png",
+            purpose: "any"
           },
           {
             src: "/pwa-512x512.png",
             sizes: "512x512",
-            type: "image/png"
+            type: "image/png",
+            purpose: "any"
           }
         ]
       }

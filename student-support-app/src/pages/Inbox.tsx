@@ -9,13 +9,16 @@ import {
   getDoc,
   getDocs,
   orderBy,
-  limit
+  limit,
+  deleteDoc
 } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 
 export default function Inbox() {
 
   const [chats, setChats] = useState<any[]>([]);
+  const [menuOpen, setMenuOpen] = useState<string | null>(null);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,14 +31,11 @@ export default function Inbox() {
     );
 
     const unsubscribe = onSnapshot(q, async (snapshot) => {
-
       const chatList: any[] = [];
 
       for (const chatDoc of snapshot.docs) {
-
         const data = chatDoc.data();
 
-        // ✅ GET OTHER USER
         const otherUserId = data.participants.find(
           (id: string) => id !== user.uid
         );
@@ -47,7 +47,6 @@ export default function Inbox() {
 
           if (userSnap.exists()) {
             const userData = userSnap.data();
-
             otherUserName =
               userData?.name ||
               userData?.displayName ||
@@ -56,7 +55,6 @@ export default function Inbox() {
           }
         }
 
-        // ✅ GET LAST MESSAGE
         const messagesRef = collection(db, "chats", chatDoc.id, "messages");
 
         const lastMsgQuery = query(
@@ -87,11 +85,19 @@ export default function Inbox() {
       }
 
       setChats(chatList);
-
     });
 
     return () => unsubscribe();
   }, []);
+
+  // ✅ DELETE CHAT
+  const deleteChat = async (chatId: string) => {
+    const confirmDelete = confirm("Delete this chat?");
+    if (!confirmDelete) return;
+
+    await deleteDoc(doc(db, "chats", chatId));
+    setMenuOpen(null);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4] p-6">
@@ -110,32 +116,42 @@ export default function Inbox() {
           {chats.map((chat) => (
             <div
               key={chat.id}
-              onClick={() => navigate(`/chat/${chat.id}`)}
-              className="bg-white p-5 rounded-xl shadow cursor-pointer hover:shadow-md transition flex justify-between items-center"
+              className="bg-white p-5 rounded-xl shadow flex justify-between items-center relative"
             >
-              <div>
-                {/* NAME */}
+              <div onClick={() => navigate(`/chat/${chat.id}`)} className="cursor-pointer">
                 <p className="font-semibold text-lg">
                   {chat.otherUserName}
                 </p>
 
-                {/* LAST MESSAGE */}
                 <p className="text-gray-500 text-sm truncate max-w-xs">
                   {chat.lastMessage}
                 </p>
               </div>
 
-              {/* 👉 optional arrow */}
-              <span className="text-gray-400">
-                →
-              </span>
+              <button
+                onClick={() =>
+                  setMenuOpen(menuOpen === chat.id ? null : chat.id)
+                }
+                className="text-lg"
+              >
+                ⋮
+              </button>
 
+              {menuOpen === chat.id && (
+                <div className="absolute right-4 top-12 bg-white shadow-lg rounded-lg p-2 z-50">
+                  <button
+                    onClick={() => deleteChat(chat.id)}
+                    className="text-red-500 text-sm"
+                  >
+                    Delete Chat
+                  </button>
+                </div>
+              )}
             </div>
           ))}
 
         </div>
       )}
-
     </div>
   );
 }

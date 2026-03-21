@@ -24,12 +24,14 @@ export default function Chat() {
   const [messages, setMessages] = useState<any[]>([]);
   const [text, setText] = useState("");
   const [otherUserName, setOtherUserName] = useState("");
-  const [otherUserId, setOtherUserId] = useState(""); // ✅ NEW
-  const [menuOpen, setMenuOpen] = useState<string | null>(null);
+  const [otherUserId, setOtherUserId] = useState("");
+
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [msgMenu, setMsgMenu] = useState<string | null>(null);
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
-  // ✅ LOAD USER + GET receiverId
+  // LOAD USER
   useEffect(() => {
     const loadUser = async () => {
       if (!chatId) return;
@@ -47,10 +49,9 @@ export default function Chat() {
 
       if (!otherUser) return;
 
-      setOtherUserId(otherUser); // ✅ IMPORTANT
+      setOtherUserId(otherUser);
 
       const userSnap = await getDoc(doc(db, "users", otherUser));
-
       if (userSnap.exists()) {
         setOtherUserName(userSnap.data().name || "User");
       }
@@ -59,7 +60,7 @@ export default function Chat() {
     loadUser();
   }, [chatId]);
 
-  // ✅ LOAD MESSAGES + MARK AS READ
+  // LOAD MESSAGES
   useEffect(() => {
     if (!chatId) return;
 
@@ -77,12 +78,8 @@ export default function Chat() {
       for (const docItem of snapshot.docs) {
         const data: any = docItem.data();
 
-        list.push({
-          id: docItem.id,
-          ...data
-        });
+        list.push({ id: docItem.id, ...data });
 
-        // ✅ mark as read
         if (data.receiverId === user.uid && data.read === false) {
           await updateDoc(
             doc(db, "chats", chatId, "messages", docItem.id),
@@ -97,7 +94,7 @@ export default function Chat() {
     return () => unsubscribe();
   }, [chatId]);
 
-  // ✅ MARK NOTIFICATIONS AS READ
+  // MARK NOTIFICATIONS READ
   useEffect(() => {
     const markNotificationsRead = async () => {
       const user = auth.currentUser;
@@ -121,12 +118,11 @@ export default function Chat() {
     markNotificationsRead();
   }, []);
 
-  // AUTO SCROLL
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // ✅ SEND MESSAGE (FIXED)
+  // SEND MESSAGE
   const sendMessage = async () => {
     const user = auth.currentUser;
 
@@ -142,7 +138,7 @@ export default function Chat() {
     await addDoc(collection(db, "chats", chatId, "messages"), {
       text,
       senderId: user.uid,
-      receiverId: otherUserId, // ✅🔥 CRITICAL FIX
+      receiverId: otherUserId,
       timestamp: serverTimestamp(),
       read: false
     });
@@ -150,13 +146,13 @@ export default function Chat() {
     setText("");
   };
 
-  // DELETE MESSAGE
+  // UNSEND
   const unsendMessage = async (id: string) => {
     if (!chatId) return;
     await deleteDoc(doc(db, "chats", chatId, "messages", id));
   };
 
-  // EDIT MESSAGE
+  // EDIT
   const editMessage = async (msg: any) => {
     if (!chatId) return;
 
@@ -169,15 +165,48 @@ export default function Chat() {
     );
   };
 
+  // DELETE CHAT
+  const deleteChat = async () => {
+    if (!chatId) return;
+
+    const confirmDelete = confirm("Delete this chat?");
+    if (!confirmDelete) return;
+
+    const messagesRef = collection(db, "chats", chatId, "messages");
+    const snap = await getDocs(messagesRef);
+
+    for (const docItem of snap.docs) {
+      await deleteDoc(docItem.ref);
+    }
+
+    await deleteDoc(doc(db, "chats", chatId));
+
+    window.location.href = "/inbox";
+  };
+
   return (
     <div className="h-screen bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4] flex flex-col">
 
-      <div className="glass-effect px-6 py-4 shadow-sm font-semibold text-lg">
-        💬 {otherUserName || "Chat"}
+      {/* HEADER */}
+      <div className="glass-effect px-6 py-4 shadow-sm font-semibold text-lg flex justify-between items-center relative">
+        <span>💬 {otherUserName || "Chat"}</span>
+
+        <button onClick={() => setMenuOpen(!menuOpen)}>⋮</button>
+
+        {menuOpen && (
+          <div className="absolute right-4 top-14 bg-white shadow-lg rounded-lg p-2">
+            <button
+              onClick={deleteChat}
+              className="text-red-500 text-sm"
+            >
+              Delete Chat
+            </button>
+          </div>
+        )}
       </div>
 
+      {/* MESSAGES */}
       <div className="flex-1 overflow-y-auto p-6 space-y-3">
-
         {messages.map((msg) => {
           const isMe = msg.senderId === auth.currentUser?.uid;
 
@@ -191,6 +220,27 @@ export default function Chat() {
               }`}
             >
               {msg.text}
+
+              {isMe && (
+                <>
+                  <button
+                    onClick={() =>
+                      setMsgMenu(msgMenu === msg.id ? null : msg.id)
+                    }
+                    className="absolute top-1 right-2 text-sm"
+                  >
+                    ⋮
+                  </button>
+
+                  {msgMenu === msg.id && (
+                    <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-lg p-2 text-black">
+                      <button onClick={() => editMessage(msg)}>Edit</button>
+                      <br />
+                      <button onClick={() => unsendMessage(msg.id)}>Unsend</button>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           );
         })}
@@ -198,6 +248,7 @@ export default function Chat() {
         <div ref={bottomRef}></div>
       </div>
 
+      {/* INPUT */}
       <div className="glass-effect p-4 flex gap-3">
         <input
           value={text}

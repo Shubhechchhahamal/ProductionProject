@@ -4,9 +4,7 @@ import {
   collection,
   query,
   orderBy,
-  onSnapshot,
-  where,
-  collectionGroup
+  onSnapshot
 } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { setupPresence } from "../presence";
@@ -15,9 +13,6 @@ import { onAuthStateChanged } from "firebase/auth";
 export default function Dashboard() {
   const [posts, setPosts] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
-
-  const [unreadMessages, setUnreadMessages] = useState(0);
-  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   const navigate = useNavigate();
 
@@ -42,49 +37,6 @@ export default function Dashboard() {
         list.push({ id: doc.id, ...doc.data() });
       });
       setPosts(list);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  // ✅ 🔥 REAL-TIME MESSAGE COUNT (FIXED PROPERLY)
-  useEffect(() => {
-    let unsubscribeMessages: any;
-
-    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-      if (!user) return;
-
-      const q = query(
-        collectionGroup(db, "messages"),
-        where("receiverId", "==", user.uid),
-        where("read", "==", false)
-      );
-
-      unsubscribeMessages = onSnapshot(q, (snapshot) => {
-        console.log("LIVE MESSAGE COUNT:", snapshot.size);
-        setUnreadMessages(snapshot.size);
-      });
-    });
-
-    return () => {
-      unsubscribeAuth();
-      if (unsubscribeMessages) unsubscribeMessages();
-    };
-  }, []);
-
-  // ✅ 🔔 NOTIFICATIONS (ALREADY WORKING)
-  useEffect(() => {
-    const user = auth.currentUser;
-    if (!user) return;
-
-    const q = query(
-      collection(db, "notifications"),
-      where("userId", "==", user.uid),
-      where("read", "==", false)
-    );
-
-    const unsubscribe = onSnapshot(q, (snap) => {
-      setUnreadNotifications(snap.size);
     });
 
     return () => unsubscribe();
