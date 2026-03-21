@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { signOut } from "firebase/auth";
-import { auth, db } from "../firebase";
+import { auth, db, rtdb } from "../firebase";
 import { doc, getDoc } from "firebase/firestore";
+import { ref, onValue } from "firebase/database";
 
 export default function Navbar({
   unreadMessages,
@@ -11,13 +12,11 @@ export default function Navbar({
   const navigate = useNavigate();
 
   const [userName, setUserName] = useState("");
+  const [onlineCount, setOnlineCount] = useState(0);
 
-  const isAdmin =
-    auth.currentUser?.email === "s.hamal2465@student.leedsbeckett.ac.uk";
-
-  // ✅ LOAD USER NAME HERE
+  // ✅ LOAD USER NAME
   useEffect(() => {
-    const loadUser = async () => {
+    const loadUser = async () => { 
       const user = auth.currentUser;
       if (!user) return;
 
@@ -28,6 +27,28 @@ export default function Navbar({
     };
 
     loadUser();
+  }, []);
+
+  // ✅ LISTEN TO ONLINE USERS (FIXED)
+  useEffect(() => {
+    const statusRef = ref(rtdb, "status");
+
+    onValue(statusRef, (snapshot) => {
+      const data = snapshot.val() || {};
+
+      const currentUserId = auth.currentUser?.uid;
+
+      // ✅ prevent duplicates + exclude yourself
+      const uniqueUsers = new Set<string>();
+
+      Object.entries(data).forEach(([uid, user]: any) => {
+        if (uid !== currentUserId && user?.state === "online") {
+          uniqueUsers.add(uid);
+        }
+      });
+
+      setOnlineCount(uniqueUsers.size);
+    });
   }, []);
 
   const firstName = userName ? userName.split(" ")[0] : "User";
@@ -84,11 +105,10 @@ export default function Navbar({
             )}
           </div>
 
-          {isAdmin && (
-            <button onClick={() => navigate("/students")}>
-              👥 Students
-            </button>
-          )}
+          {/* ✅ FIXED STUDENTS COUNT */}
+          <button onClick={() => navigate("/students")}>
+            👥 Students {onlineCount > 0 && `(${onlineCount} online)`}
+          </button>
 
           <Link to="/create-post">➕ Post</Link>
 

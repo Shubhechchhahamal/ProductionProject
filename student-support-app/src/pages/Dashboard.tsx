@@ -1,20 +1,38 @@
 import { useEffect, useState } from "react";
-import { db } from "../firebase";
+import { db, auth } from "../firebase";
 import {
   collection,
   query,
   orderBy,
-  onSnapshot
+  onSnapshot,
+  where,
+  collectionGroup
 } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
+import { setupPresence } from "../presence";
+import { onAuthStateChanged } from "firebase/auth";
 
 export default function Dashboard() {
   const [posts, setPosts] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
 
+  const [unreadMessages, setUnreadMessages] = useState(0);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+
   const navigate = useNavigate();
 
-  // ✅ LOAD POSTS (REAL-TIME)
+  // ✅ PRESENCE
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setupPresence();
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // ✅ POSTS (REAL-TIME)
   useEffect(() => {
     const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
 
@@ -24,6 +42,49 @@ export default function Dashboard() {
         list.push({ id: doc.id, ...doc.data() });
       });
       setPosts(list);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // ✅ 🔥 REAL-TIME MESSAGE COUNT (FIXED PROPERLY)
+  useEffect(() => {
+    let unsubscribeMessages: any;
+
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      if (!user) return;
+
+      const q = query(
+        collectionGroup(db, "messages"),
+        where("receiverId", "==", user.uid),
+        where("read", "==", false)
+      );
+
+      unsubscribeMessages = onSnapshot(q, (snapshot) => {
+        console.log("LIVE MESSAGE COUNT:", snapshot.size);
+        setUnreadMessages(snapshot.size);
+      });
+    });
+
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeMessages) unsubscribeMessages();
+    };
+  }, []);
+
+  // ✅ 🔔 NOTIFICATIONS (ALREADY WORKING)
+  useEffect(() => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const q = query(
+      collection(db, "notifications"),
+      where("userId", "==", user.uid),
+      where("read", "==", false)
+    );
+
+    const unsubscribe = onSnapshot(q, (snap) => {
+      setUnreadNotifications(snap.size);
     });
 
     return () => unsubscribe();

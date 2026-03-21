@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { db, auth } from "../firebase";
+import { db, auth, rtdb } from "../firebase";
 import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
+import { ref, onValue } from "firebase/database";
 import { useNavigate } from "react-router-dom";
 
 export default function Students() {
@@ -8,10 +9,12 @@ export default function Students() {
   const navigate = useNavigate();
 
   const [students, setStudents] = useState<any[]>([]);
+  const [statuses, setStatuses] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
 
+  // 🔹 LOAD STUDENTS
   useEffect(() => {
 
     const loadStudents = async () => {
@@ -20,9 +23,14 @@ export default function Students() {
 
       const list: any[] = [];
 
+      const currentUserId = auth.currentUser?.uid;
+
       snap.docs.forEach((docItem) => {
 
         const data: any = docItem.data();
+
+        // ❌ REMOVE CURRENT USER
+        if (docItem.id === currentUserId) return;
 
         list.push({
           id: docItem.id,
@@ -51,7 +59,16 @@ export default function Students() {
 
   }, []);
 
+  // 🔹 LISTEN TO ONLINE STATUS
+  useEffect(() => {
+    const statusRef = ref(rtdb, "status");
 
+    onValue(statusRef, (snapshot) => {
+      setStatuses(snapshot.val() || {});
+    });
+  }, []);
+
+  // 🔹 DELETE USER (ADMIN ONLY)
   const deleteUser = async (userId: string) => {
 
     const confirmDelete = window.confirm("Are you sure you want to delete this user completely?");
@@ -96,7 +113,7 @@ export default function Students() {
 
   };
 
-
+  // 🔹 SEARCH FILTER
   const filteredStudents = students.filter((student) => {
 
     const query = search.toLowerCase().trim();
@@ -110,7 +127,7 @@ export default function Students() {
 
   });
 
-
+  // 🔹 LOADING STATE
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen text-gray-500">
@@ -144,41 +161,52 @@ export default function Students() {
       {/* STUDENT LIST */}
       <div className="max-w-4xl mx-auto mt-6 space-y-5">
 
-        {filteredStudents.map((student) => (
+        {filteredStudents.map((student) => {
 
-          <div
-            key={student.id}
-            className="bg-white p-5 sm:p-6 rounded-2xl shadow hover:shadow-md transition"
-          >
+          const isOnline = statuses[student.id]?.state === "online";
 
+          return (
             <div
-              onClick={() => navigate(`/profile/${student.id}`)}
-              className="cursor-pointer"
+              key={student.id}
+              className="bg-white p-5 sm:p-6 rounded-2xl shadow hover:shadow-md transition"
             >
-              <p className="font-semibold text-gray-800 text-lg">
-                {student.name}
-              </p>
 
-              <p className="text-sm text-gray-500 mt-1">
-                {student.country}
-              </p>
-            </div>
-
-            {isAdmin && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  deleteUser(student.id);
-                }}
-                className="mt-4 px-4 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+              <div
+                onClick={() => navigate(`/profile/${student.id}`)}
+                className="cursor-pointer"
               >
-                Delete User
-              </button>
-            )}
+                <p className="font-semibold text-gray-800 text-lg flex items-center gap-2">
+                  {student.name}
 
-          </div>
+                  {/* 🟢 ONLINE STATUS */}
+                  <span
+                    className={`h-3 w-3 rounded-full ${
+                      isOnline ? "bg-green-500" : "bg-gray-300"
+                    }`}
+                  />
+                </p>
 
-        ))}
+                <p className="text-sm text-gray-500 mt-1">
+                  {student.country}
+                </p>
+              </div>
+
+              {/* ❗ ADMIN ONLY */}
+              {isAdmin && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteUser(student.id);
+                  }}
+                  className="mt-4 px-4 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                >
+                  Delete User
+                </button>
+              )}
+
+            </div>
+          );
+        })}
 
         {filteredStudents.length === 0 && (
           <div className="bg-white rounded-2xl shadow p-8 text-center text-gray-500">
@@ -189,7 +217,5 @@ export default function Students() {
       </div>
 
     </div>
-
   );
-
 }

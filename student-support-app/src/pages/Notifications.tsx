@@ -18,6 +18,7 @@ export default function Notifications() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // ✅ LOAD NOTIFICATIONS (REAL-TIME)
   useEffect(() => {
 
     const user = auth.currentUser;
@@ -26,49 +27,33 @@ export default function Notifications() {
     const q = query(
       collection(db, "notifications"),
       where("userId", "==", user.uid),
-      orderBy("createdAt", "desc")
+      orderBy("createdAt", "desc") // ⚠️ remove if index error
     );
 
-    // 🔥 REAL-TIME LISTENER
-    const unsubscribe = onSnapshot(q, async (snapshot) => {
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const list: any[] = [];
 
-      const list: any[] = [];
-      const updates: any[] = [];
+        snapshot.forEach((d) => {
+          const data = d.data();
 
-      snapshot.forEach((d) => {
-        const data = d.data();
+          // ❌ skip message notifications if needed
+          if (data.type === "message") return;
 
-        if (data.type === "message") return;
+          list.push({ id: d.id, ...data });
+        });
 
-        list.push({ id: d.id, ...data });
+        console.log("✅ Notifications loaded:", list.length);
 
-        // 🔥 AUTO MARK AS READ
-        if (data.read === false) {
-          updates.push(
-            updateDoc(doc(db, "notifications", d.id), {
-              read: true
-            })
-          );
-        }
-      });
-
-      await Promise.all(updates);
-
-      // 🔥 REMOVE DUPLICATES
-      const uniqueList = list.filter(
-        (item, index, self) =>
-          index ===
-          self.findIndex(
-            (n) =>
-              n.postId === item.postId &&
-              n.message === item.message
-          )
-      );
-
-      setNotifications(uniqueList);
-      setLoading(false);
-
-    });
+        setNotifications(list);
+        setLoading(false);
+      },
+      (error) => {
+        console.error("❌ Notification listener error:", error);
+        setLoading(false);
+      }
+    );
 
     return () => unsubscribe();
 
@@ -102,9 +87,22 @@ export default function Notifications() {
 
               <div
                 key={n.id}
-                onClick={() => {
-                  if (n.postId) {
-                    navigate(`/post/${n.postId}`);
+                onClick={async () => {
+                  try {
+                    // ✅ mark as read ONLY when clicked
+                    if (!n.read) {
+                      await updateDoc(doc(db, "notifications", n.id), {
+                        read: true,
+                      });
+                    }
+
+                    // ✅ navigate
+                    if (n.postId) {
+                      navigate(`/post/${n.postId}`);
+                    }
+
+                  } catch (err) {
+                    console.error("❌ Error updating notification:", err);
                   }
                 }}
                 className="glass-effect p-5 rounded-2xl cursor-pointer hover:scale-[1.02] transition flex justify-between items-center"
@@ -122,9 +120,12 @@ export default function Notifications() {
                   )}
                 </div>
 
-                <span className="text-indigo-500 text-sm">
-                  View →
-                </span>
+                {/* ✅ unread indicator */}
+                {!n.read && (
+                  <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                    New
+                  </span>
+                )}
 
               </div>
 
