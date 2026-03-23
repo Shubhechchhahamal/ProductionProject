@@ -48,16 +48,21 @@ export default function CreatePost() {
         return;
       }
 
+      // ✅ GET USER DATA
       const userDoc = await getDoc(doc(db, "users", user.uid));
       const userData = userDoc.data();
 
+      console.log("USER DATA:", userData); // 🔥 DEBUG
+
+      // ✅ SAVE POST (WITH COUNTRY)
       await addDoc(collection(db, "posts"), {
         title: title.trim(),
         message: message.trim(),
         category,
         createdAt: serverTimestamp(),
         userId: user.uid,
-        userName: userData?.name || "User"
+        userName: userData?.name || "User",
+        country: userData?.country || "" // 🔥 THIS IS THE FIX
       });
 
       navigate("/home");
@@ -75,18 +80,15 @@ export default function CreatePost() {
 
       <div className="max-w-xl mx-auto">
 
-        {/* TITLE */}
         <h1 className="text-3xl font-bold gradient-text mb-6 text-center">
           ✍️ Create a Post
         </h1>
 
-        {/* FORM CARD */}
         <form
           onSubmit={handleSubmit}
           className="glass-effect p-6 rounded-2xl shadow space-y-5"
         >
 
-          {/* Category */}
           <div>
             <label className="block text-sm mb-1 text-gray-600">
               Category
@@ -105,7 +107,6 @@ export default function CreatePost() {
             </select>
           </div>
 
-          {/* Title */}
           <div>
             <label className="block text-sm mb-1 text-gray-600">
               Title
@@ -120,7 +121,6 @@ export default function CreatePost() {
             />
           </div>
 
-          {/* Message */}
           <div>
             <label className="block text-sm mb-1 text-gray-600">
               Message
@@ -134,7 +134,6 @@ export default function CreatePost() {
             />
           </div>
 
-          {/* Submit */}
           <button
             type="submit"
             disabled={loading}

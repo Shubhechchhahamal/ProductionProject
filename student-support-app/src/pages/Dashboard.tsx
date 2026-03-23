@@ -10,6 +10,9 @@ import { useNavigate } from "react-router-dom";
 import { setupPresence } from "../presence";
 import { onAuthStateChanged } from "firebase/auth";
 
+// ✅ IMPORT FLAG COMPONENT (MATCH YOUR FILE NAME)
+import Flag from "../components/Flags";
+
 export default function Dashboard() {
   const [posts, setPosts] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -97,7 +100,11 @@ export default function Dashboard() {
               className="bg-white p-5 sm:p-6 rounded-2xl shadow hover:shadow-md transition cursor-pointer"
               onClick={() => navigate(`/post/${post.id}`)}
             >
-              <p className="font-semibold text-gray-800">{post.userName}</p>
+              {/* ✅ USER NAME + FLAG (SAFE) */}
+              <p className="font-semibold text-gray-800">
+                {post.userName}
+                {post.country ? <Flag country={post.country} /> : null}
+              </p>
 
               <p className="text-xs text-gray-400">
                 {post.createdAt?.toDate?.().toLocaleString()}
