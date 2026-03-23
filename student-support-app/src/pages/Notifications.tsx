@@ -27,7 +27,7 @@ export default function Notifications() {
     const q = query(
       collection(db, "notifications"),
       where("userId", "==", user.uid),
-      orderBy("createdAt", "desc") // ⚠️ remove if index error
+      orderBy("createdAt", "desc") // remove if index error
     );
 
     const unsubscribe = onSnapshot(
@@ -38,7 +38,7 @@ export default function Notifications() {
         snapshot.forEach((d) => {
           const data = d.data();
 
-          // ❌ skip message notifications if needed
+          // skip message notifications if needed
           if (data.type === "message") return;
 
           list.push({ id: d.id, ...data });
@@ -89,14 +89,14 @@ export default function Notifications() {
                 key={n.id}
                 onClick={async () => {
                   try {
-                    // ✅ mark as read ONLY when clicked
+                    // mark as read ONLY when clicked
                     if (!n.read) {
                       await updateDoc(doc(db, "notifications", n.id), {
                         read: true,
                       });
                     }
 
-                    // ✅ navigate
+                    // navigate
                     if (n.postId) {
                       navigate(`/post/${n.postId}`);
                     }
@@ -120,7 +120,7 @@ export default function Notifications() {
                   )}
                 </div>
 
-                {/* ✅ unread indicator */}
+                {/*  unread indicator */}
                 {!n.read && (
                   <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
                     New

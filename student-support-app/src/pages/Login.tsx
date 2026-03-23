@@ -21,7 +21,7 @@ export default function Login() {
 
     const normalizedEmail = email.toLowerCase();
 
-    // ✅ Restrict to student emails ONLY (better)
+    // ✅ Restrict to student emails ONLY 
     if (!normalizedEmail.endsWith("@student.leedsbeckett.ac.uk")) {
       setError("Only Leeds Beckett student emails are allowed.");
       return;

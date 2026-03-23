@@ -14,7 +14,7 @@ export default function Students() {
   const [search, setSearch] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // 🔹 LOAD STUDENTS
+  //  LOAD STUDENTS
   useEffect(() => {
 
     const loadStudents = async () => {
@@ -29,7 +29,7 @@ export default function Students() {
 
         const data: any = docItem.data();
 
-        // ❌ REMOVE CURRENT USER
+        //  REMOVE CURRENT USER
         if (docItem.id === currentUserId) return;
 
         list.push({
@@ -59,7 +59,7 @@ export default function Students() {
 
   }, []);
 
-  // 🔹 LISTEN TO ONLINE STATUS
+  //  LISTEN TO ONLINE STATUS
   useEffect(() => {
     const statusRef = ref(rtdb, "status");
 
@@ -68,7 +68,7 @@ export default function Students() {
     });
   }, []);
 
-  // 🔹 DELETE USER (ADMIN ONLY)
+  //  DELETE USER (ADMIN ONLY)
   const deleteUser = async (userId: string) => {
 
     const confirmDelete = window.confirm("Are you sure you want to delete this user completely?");
@@ -113,7 +113,7 @@ export default function Students() {
 
   };
 
-  // 🔹 SEARCH FILTER
+  //  SEARCH FILTER
   const filteredStudents = students.filter((student) => {
 
     const query = search.toLowerCase().trim();
@@ -127,7 +127,7 @@ export default function Students() {
 
   });
 
-  // 🔹 LOADING STATE
+  // LOADING STATE
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen text-gray-500">

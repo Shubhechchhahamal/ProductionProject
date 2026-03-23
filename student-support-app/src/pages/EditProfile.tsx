@@ -14,7 +14,7 @@ export default function EditProfile() {
   const [yearsInUK, setYearsInUK] = useState("");
   const [helpOffer, setHelpOffer] = useState("");
 
-  // ✅ LOAD USER DATA
+  //  LOAD USER DATA
   useEffect(() => {
     const load = async () => {
       const user = auth.currentUser;
@@ -41,7 +41,7 @@ export default function EditProfile() {
     load();
   }, []);
 
-  // ✅ SAVE PROFILE
+  //  SAVE PROFILE
   const handleSave = async () => {
     const user = auth.currentUser;
     if (!user) return;
@@ -55,7 +55,7 @@ export default function EditProfile() {
         helpOffer,
       });
 
-      // ✅ GO BACK TO PROFILE WITH UID
+      //  GO BACK TO PROFILE WITH UID
       navigate(`/profile/${user.uid}`);
 
     } catch (error) {
@@ -64,7 +64,7 @@ export default function EditProfile() {
     }
   };
 
-  // 🔥 LOADING UI
+  //  LOADING UI
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4] flex justify-center items-center">

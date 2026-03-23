@@ -16,7 +16,7 @@ const firebaseConfig = {
   appId: "1:211379063714:web:f734919ae715e573a4c0fb",
   measurementId: "G-87BKFQHKVG",
 
-  // ✅ ONLY ADD THIS LINE
+
   databaseURL: "https://homeaway-ab63f-default-rtdb.europe-west1.firebasedatabase.app",
 };
 

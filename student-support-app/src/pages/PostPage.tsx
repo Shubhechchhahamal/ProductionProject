@@ -88,7 +88,7 @@ export default function PostPage() {
   createdAt: serverTimestamp(),
   userId: user.uid,
   userName: userData?.name || "User",
-  country: userData?.country || "" // ✅ ADD THIS
+  country: userData?.country || "" 
 });
 
     if (post.userId !== user.uid) {

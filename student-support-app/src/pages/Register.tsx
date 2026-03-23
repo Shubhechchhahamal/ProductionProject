@@ -12,7 +12,7 @@ import {
   getDocs,
   query,
   where,
- serverTimestamp   // ✅ ADD THIS HERE
+ serverTimestamp   
  } from "firebase/firestore";
  import { useNavigate } from "react-router-dom";
 
@@ -27,7 +27,7 @@ export default function Register() {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // ✅ CHECK IF USER ALREADY EXISTS IN FIRESTORE
+  //  CHECK IF USER ALREADY EXISTS IN FIRESTORE
   const checkExistingUser = async (email: string) => {
     const q = query(collection(db, "users"), where("email", "==", email));
     const snap = await getDocs(q);
@@ -41,7 +41,7 @@ export default function Register() {
 
     const normalizedEmail = email.toLowerCase();
 
-    // ✅ Email restriction
+    // Email restriction
     if (
       !normalizedEmail.endsWith("@leedsbeckett.ac.uk") &&
       !normalizedEmail.endsWith("@student.leedsbeckett.ac.uk")
@@ -53,7 +53,7 @@ export default function Register() {
     try {
       setLoading(true);
 
-      // 🔥 CHECK FIRESTORE FIRST
+      //  CHECK FIRESTORE FIRST
       const exists = await checkExistingUser(normalizedEmail);
 
       if (exists) {
@@ -62,7 +62,7 @@ export default function Register() {
         return;
       }
 
-      // 🔥 CREATE USER IN AUTH
+      //  CREATE USER IN AUTH
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         normalizedEmail,
@@ -71,7 +71,7 @@ export default function Register() {
 
       const user = userCredential.user;
 
-      // ✅ SEND VERIFICATION EMAIL
+      // SEND VERIFICATION EMAIL
       await sendEmailVerification(user, {
         url: "https://homeaway-ab63f.web.app/verify-email",
       });
@@ -83,12 +83,12 @@ export default function Register() {
       email: normalizedEmail,
       createdAt: serverTimestamp(),
 
-  // 🟢 NEW FIELDS (IMPORTANT)
+  //  NEW FIELDS 
   isOnline: true,
   lastActive: serverTimestamp(),
 });
 
-      // ✅ SIGN OUT UNTIL VERIFIED
+      //  SIGN OUT UNTIL VERIFIED
       await signOut(auth);
 
       setSuccess("Verification email sent!");

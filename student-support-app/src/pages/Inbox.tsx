@@ -90,7 +90,7 @@ export default function Inbox() {
     return () => unsubscribe();
   }, []);
 
-  // ✅ DELETE CHAT
+  //  DELETE CHAT
   const deleteChat = async (chatId: string) => {
     const confirmDelete = confirm("Delete this chat?");
     if (!confirmDelete) return;

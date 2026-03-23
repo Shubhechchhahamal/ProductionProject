@@ -48,13 +48,13 @@ export default function CreatePost() {
         return;
       }
 
-      // ✅ GET USER DATA
+      //  GET USER DATA
       const userDoc = await getDoc(doc(db, "users", user.uid));
       const userData = userDoc.data();
 
-      console.log("USER DATA:", userData); // 🔥 DEBUG
+      console.log("USER DATA:", userData); //  DEBUG
 
-      // ✅ SAVE POST (WITH COUNTRY)
+      //  SAVE POST (WITH COUNTRY)
       await addDoc(collection(db, "posts"), {
         title: title.trim(),
         message: message.trim(),
@@ -62,7 +62,7 @@ export default function CreatePost() {
         createdAt: serverTimestamp(),
         userId: user.uid,
         userName: userData?.name || "User",
-        country: userData?.country || "" // 🔥 THIS IS THE FIX
+        country: userData?.country || "" 
       });
 
       navigate("/home");

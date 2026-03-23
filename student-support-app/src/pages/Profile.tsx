@@ -105,7 +105,7 @@ export default function Profile() {
     navigate(`/chat/${chat.id}`);
   };
 
-  // 🔥 LOADING
+  //  LOADING
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4] flex justify-center items-center">
