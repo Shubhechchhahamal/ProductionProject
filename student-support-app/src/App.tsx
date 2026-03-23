@@ -34,13 +34,11 @@ import ProtectedRoute from "./ProtectedRoute";
 import Navbar from "./components/Navbar";
 
 export default function App() {
-
   const [user, setUser] = useState<User | null>(null);
   const [userName] = useState("");
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
 
-  // ✅ AUTH LISTENER
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (u) => {
       setUser(u);
@@ -54,25 +52,22 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  // ✅ 🔥 FINAL REAL-TIME LISTENERS (FIXED PROPERLY)
   useEffect(() => {
     if (!user?.uid) return;
 
     console.log("STARTING LISTENERS");
 
-    // ✅ 🔥 MESSAGES (FINAL CORRECT VERSION)
     const messagesQuery = query(
       collectionGroup(db, "messages"),
-      where("receiverId", "==", user.uid),   // ✅ CRITICAL FIX
+      where("receiverId", "==", user.uid),
       where("read", "==", false)
     );
 
     const unsubscribeMessages = onSnapshot(messagesQuery, (snapshot) => {
       console.log("LIVE MESSAGE COUNT:", snapshot.size);
-      setUnreadMessages(snapshot.size); // ✅ CLEAN + CORRECT
+      setUnreadMessages(snapshot.size);
     });
 
-    // ✅ 🔔 NOTIFICATIONS (UNCHANGED)
     const notifQuery = query(
       collection(db, "notifications"),
       where("userId", "==", user.uid),
@@ -94,12 +89,23 @@ export default function App() {
       unsubscribeMessages();
       unsubscribeNotif();
     };
-
   }, [user]);
+
+  const protectedLayout = (page: React.ReactNode) => (
+    <ProtectedRoute>
+      <div className="min-h-screen overflow-x-hidden bg-white pb-20 md:pb-0">
+        <Navbar
+          userName={userName}
+          unreadMessages={unreadMessages}
+          unreadNotifications={unreadNotifications}
+        />
+        {page}
+      </div>
+    </ProtectedRoute>
+  );
 
   return (
     <Routes>
-
       {/* PUBLIC */}
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
@@ -109,151 +115,15 @@ export default function App() {
       <Route path="/verify-email" element={<VerifyEmail />} />
 
       {/* PROTECTED */}
-
-      <Route
-        path="/home"
-        element={
-          <ProtectedRoute>
-            <>
-              <Navbar
-                userName={userName}
-                unreadMessages={unreadMessages}
-                unreadNotifications={unreadNotifications}
-              />
-              <Dashboard />
-            </>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/inbox"
-        element={
-          <ProtectedRoute>
-            <>
-              <Navbar
-                userName={userName}
-                unreadMessages={unreadMessages}
-                unreadNotifications={unreadNotifications}
-              />
-              <Inbox />
-            </>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/notifications"
-        element={
-          <ProtectedRoute>
-            <>
-              <Navbar
-                userName={userName}
-                unreadMessages={unreadMessages}
-                unreadNotifications={unreadNotifications}
-              />
-              <Notifications />
-            </>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/profile/:uid"
-        element={
-          <ProtectedRoute>
-            <>
-              <Navbar
-                userName={userName}
-                unreadMessages={unreadMessages}
-                unreadNotifications={unreadNotifications}
-              />
-              <Profile />
-            </>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/edit-profile"
-        element={
-          <ProtectedRoute>
-            <>
-              <Navbar
-                userName={userName}
-                unreadMessages={unreadMessages}
-                unreadNotifications={unreadNotifications}
-              />
-              <EditProfile />
-            </>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/create-post"
-        element={
-          <ProtectedRoute>
-            <>
-              <Navbar
-                userName={userName}
-                unreadMessages={unreadMessages}
-                unreadNotifications={unreadNotifications}
-              />
-              <CreatePost />
-            </>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/post/:id"
-        element={
-          <ProtectedRoute>
-            <>
-              <Navbar
-                userName={userName}
-                unreadMessages={unreadMessages}
-                unreadNotifications={unreadNotifications}
-              />
-              <PostPage />
-            </>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/students"
-        element={
-          <ProtectedRoute>
-            <>
-              <Navbar
-                userName={userName}
-                unreadMessages={unreadMessages}
-                unreadNotifications={unreadNotifications}
-              />
-              <Students />
-            </>
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/chat/:chatId"
-        element={
-          <ProtectedRoute>
-            <>
-              <Navbar
-                userName={userName}
-                unreadMessages={unreadMessages}
-                unreadNotifications={unreadNotifications}
-              />
-              <Chat />
-            </>
-          </ProtectedRoute>
-        }
-      />
-
+      <Route path="/home" element={protectedLayout(<Dashboard />)} />
+      <Route path="/inbox" element={protectedLayout(<Inbox />)} />
+      <Route path="/notifications" element={protectedLayout(<Notifications />)} />
+      <Route path="/profile/:uid" element={protectedLayout(<Profile />)} />
+      <Route path="/edit-profile" element={protectedLayout(<EditProfile />)} />
+      <Route path="/create-post" element={protectedLayout(<CreatePost />)} />
+      <Route path="/post/:id" element={protectedLayout(<PostPage />)} />
+      <Route path="/students" element={protectedLayout(<Students />)} />
+      <Route path="/chat/:chatId" element={protectedLayout(<Chat />)} />
     </Routes>
   );
 }

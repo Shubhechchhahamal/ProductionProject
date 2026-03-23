@@ -18,11 +18,10 @@ export default defineConfig({
         short_name: "HomeAway",
         description: "Peer support platform for international students",
 
-        theme_color: "#ffffff",
+        theme_color: "#a855f7", // ✅ purple
         background_color: "#ffffff",
 
-        display: "standalone",
-        display_override: ["window-controls-overlay"], // ✅ THIS LINE FIXES IT
+        display: "standalone", // ✅ correct
 
         start_url: "/",
 
@@ -40,6 +39,5 @@ export default defineConfig({
         ]
       }
     })
-
   ]
 });
