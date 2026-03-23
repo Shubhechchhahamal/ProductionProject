@@ -20,6 +20,13 @@ export default function Home() {
             </a>
 
             <a
+              href="#about"
+              className="text-gray-600 hover:text-purple-600 font-medium"
+            >
+              About
+            </a>
+
+            <a
               href="#how-it-works"
               className="text-gray-600 hover:text-purple-600 font-medium"
             >
@@ -93,7 +100,7 @@ export default function Home() {
       </section>
 
       {/* FEATURES */}
-      <section id="features" className="py-20 md:py-24 px-5 sm:px-6 text-center">
+      <section id="features" className="py-20 md:py-24 px-5 sm:px-6 text-center bg-white">
         <h2 className="text-3xl md:text-4xl font-bold mb-4">
           Everything you need to settle in
         </h2>
@@ -154,6 +161,43 @@ export default function Home() {
                 <p className="text-gray-500 mt-2">{item.desc}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* WHY I BUILT HOMEAWAY */}
+      <section
+        id="about"
+        className="py-28 px-5 sm:px-6 bg-gradient-to-b from-gray-50 to-white"
+      >
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-white rounded-3xl shadow-lg p-10 md:p-12 text-center border border-gray-100">
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">
+              Why I built HomeAway
+            </h2>
+
+            <p className="text-gray-600 leading-relaxed text-lg">
+              Moving from Nepal to the UK as an international student, I realised that
+              many of the challenges weren’t academic, they were everyday things.
+              Understanding how things work, finding reliable information, and adjusting
+              to a completely new environment took time.
+              <br /><br />
+              Most of it was figured out through trial and error. I noticed that many
+              students go through the same process, often without a simple way to learn
+              from others who&apos;ve already experienced it.
+              <br /><br />
+              HomeAway was created as a space where students can share experiences, ask
+              questions, and support each other through that transition.
+            </p>
+
+            <div className="mt-8 border-t border-gray-200 pt-6">
+              <p className="italic text-gray-800 text-lg">
+                Shubhechchha Hamal
+              </p>
+              <p className="text-sm text-gray-500 mt-1">
+                Founder, HomeAway
+              </p>
+            </div>
           </div>
         </div>
       </section>
