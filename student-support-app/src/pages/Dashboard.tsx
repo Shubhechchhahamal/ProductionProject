@@ -10,7 +10,6 @@ import { useNavigate } from "react-router-dom";
 import { setupPresence } from "../presence";
 import { onAuthStateChanged } from "firebase/auth";
 
-// ✅ IMPORT FLAG COMPONENT (MATCH YOUR FILE NAME)
 import Flag from "../components/Flags";
 
 export default function Dashboard() {
@@ -19,7 +18,6 @@ export default function Dashboard() {
 
   const navigate = useNavigate();
 
-  // ✅ PRESENCE
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -30,7 +28,6 @@ export default function Dashboard() {
     return () => unsubscribe();
   }, []);
 
-  // ✅ POSTS (REAL-TIME)
   useEffect(() => {
     const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
 
@@ -59,20 +56,20 @@ export default function Dashboard() {
     "Academic Support",
     "Events & Gatherings",
     "Friends",
-  ];
+  ]; 
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4] pb-24 md:pb-0">
 
       {/* HERO */}
-      <div className="max-w-4xl mx-auto mt-6 bg-white rounded-2xl p-6 shadow text-center mx-4 sm:mx-auto">
+      <div className="max-w-4xl mx-auto mt-6 bg-white rounded-2xl p-6 shadow text-center px-4 sm:px-0">
         <h2 className="text-2xl sm:text-3xl font-bold text-purple-600">
           📈 Community Feed
         </h2>
         <p className="text-gray-500 mt-2 text-sm sm:text-base">
           Connect, share, and discover with fellow international students
         </p>
-      </div>
+      </div>          
 
       {/* CATEGORY */}
       <div className="max-w-4xl mx-auto mt-4 flex gap-3 flex-wrap justify-center px-4">
@@ -100,7 +97,6 @@ export default function Dashboard() {
               className="bg-white p-5 sm:p-6 rounded-2xl shadow hover:shadow-md transition cursor-pointer"
               onClick={() => navigate(`/post/${post.id}`)}
             >
-              {/* ✅ USER NAME + FLAG (SAFE) */}
               <p className="font-semibold text-gray-800">
                 {post.userName}
                 {post.country ? <Flag country={post.country} /> : null}
@@ -134,4 +130,4 @@ export default function Dashboard() {
 
     </div>
   );
-}
+} 

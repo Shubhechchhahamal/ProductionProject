@@ -60,8 +60,11 @@ export default function Navbar({
     <>
       {/* DESKTOP NAVBAR */}
       <div className="hidden md:block bg-white shadow-sm border-b sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-6">
-          <div className="flex items-center gap-6 text-sm text-gray-600 flex-wrap">
+        <div className="w-full px-6 py-4 flex items-center justify-between gap-6">
+          
+          {/* ✅ FIXED HERE (no wrapping) */}
+          <div className="flex items-center gap-6 text-sm text-gray-600 whitespace-nowrap">
+
             <Link to="/home" className="text-lg font-bold text-purple-600 whitespace-nowrap">
               HomeAway
             </Link>
@@ -99,6 +102,10 @@ export default function Navbar({
               👥 Students {onlineCount > 0 && `(${onlineCount})`}
             </button>
 
+            <Link to="/support" className="hover:text-purple-600">
+              🤝 Support
+            </Link>
+
             <Link to="/create-post" className="hover:text-purple-600">
               ➕ Post
             </Link>
@@ -129,7 +136,7 @@ export default function Navbar({
 
       {/* MOBILE BOTTOM NAV */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t shadow-sm">
-        <div className="grid grid-cols-5 items-center text-center py-3">
+        <div className="grid grid-cols-6 items-center text-center py-3">
           <button onClick={() => navigate("/home")} className="text-2xl">
             🏠
           </button>
@@ -160,6 +167,10 @@ export default function Navbar({
             )}
           </div>
 
+          <button onClick={() => navigate("/support")} className="text-2xl">
+            🤝
+          </button>
+
           <button
             onClick={() => navigate(`/profile/${auth.currentUser?.uid}`)}
             className="text-2xl"
@@ -170,4 +181,4 @@ export default function Navbar({
       </div>
     </>
   );
-}
+} 

@@ -22,6 +22,7 @@ import {
 
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
+import Support from "./pages/Support";
 import EditProfile from "./pages/EditProfile";
 import CreatePost from "./pages/CreatePost";
 import PostPage from "./pages/PostPage";
@@ -93,7 +94,7 @@ export default function App() {
 
   const protectedLayout = (page: React.ReactNode) => (
     <ProtectedRoute>
-      <div className="min-h-screen overflow-x-hidden bg-white pb-20 md:pb-0">
+     <div className="min-h-screen overflow-x-hidden pb-20 md:pb-0">
         <Navbar
           userName={userName}
           unreadMessages={unreadMessages}
@@ -118,6 +119,7 @@ export default function App() {
       <Route path="/home" element={protectedLayout(<Dashboard />)} />
       <Route path="/inbox" element={protectedLayout(<Inbox />)} />
       <Route path="/notifications" element={protectedLayout(<Notifications />)} />
+      <Route path="/support" element={<Support />} />
       <Route path="/profile/:uid" element={protectedLayout(<Profile />)} />
       <Route path="/edit-profile" element={protectedLayout(<EditProfile />)} />
       <Route path="/create-post" element={protectedLayout(<CreatePost />)} />
