@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Flag from "../components/Flags";
 import { db, auth } from "../firebase";
 import { checkAIModeration } from "../utils/aiModeration";
 import {
@@ -83,11 +84,12 @@ export default function PostPage() {
     const userData = userSnap.data();
 
     await addDoc(collection(db, "posts", id, "replies"), {
-      message: newReply,
-      createdAt: serverTimestamp(),
-      userId: user.uid,
-      userName: userData?.name || "User",
-    });
+  message: newReply,
+  createdAt: serverTimestamp(),
+  userId: user.uid,
+  userName: userData?.name || "User",
+  country: userData?.country || "" // ✅ ADD THIS
+});
 
     if (post.userId !== user.uid) {
       await addDoc(collection(db, "notifications"), {
@@ -185,12 +187,13 @@ export default function PostPage() {
 
           </div>
 
-          <p
-            onClick={() => navigate(`/profile/${post.userId}`)}
-            className="text-sm font-semibold cursor-pointer hover:underline mt-2"
-          >
-            {post.userName}
-          </p>
+       <p
+        onClick={() => navigate(`/profile/${post.userId}`)}
+        className="text-sm font-semibold cursor-pointer hover:underline mt-2"
+        >
+        {post.userName}
+        {post.country && <Flag country={post.country} />}
+        </p>
 
           <h1 className="text-2xl font-bold mt-2 mb-3">
             {post.title}
@@ -221,11 +224,12 @@ export default function PostPage() {
 
                 <div>
                   <p
-                    className="text-xs text-gray-500 cursor-pointer hover:underline"
-                    onClick={() => navigate(`/profile/${r.userId}`)}
-                  >
-                    {r.userName}
-                  </p>
+                 className="text-xs text-gray-500 cursor-pointer hover:underline"
+                 onClick={() => navigate(`/profile/${r.userId}`)}
+                 >
+                {r.userName}
+                {r.country && <Flag country={r.country} />}
+                </p>
                   <p>{r.message}</p>
                 </div>
 

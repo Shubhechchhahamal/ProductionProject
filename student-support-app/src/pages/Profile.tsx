@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Flag from "../components/Flags";
 import { db, auth } from "../firebase";
 import { setDoc } from "firebase/firestore";
 import {
@@ -15,7 +16,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 export default function Profile() {
 
-  const navigate = useNavigate();
+  const navigate = useNavigate(); 
   const { uid } = useParams();
 
   const [userData, setUserData] = useState<any>(null);
@@ -144,13 +145,14 @@ export default function Profile() {
             {userData.name || "Unnamed user"}
           </h1>
 
-          <p className="mt-2 text-gray-500">
-            🌍 {userData.country || "Unknown"}
-          </p>
+       <div className="flex items-center justify-center gap-[2px]">
+  <span>{userData.country}</span>
+  {userData.country && <Flag country={userData.country} />}
+</div>
 
           {userData.yearsInUK && (
             <p className="text-sm mt-1 text-gray-500">
-              🇬🇧 In the UK for {userData.yearsInUK}
+             In the UK for {userData.yearsInUK}  🇬🇧
             </p>
           )}
 
