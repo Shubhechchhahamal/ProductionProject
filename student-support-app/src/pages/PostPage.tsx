@@ -11,7 +11,8 @@ import {
   getDocs,
   query,
   orderBy,
-  deleteDoc
+  deleteDoc,
+  updateDoc
 } from "firebase/firestore";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -28,6 +29,11 @@ export default function PostPage() {
 
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
 
+  // ✅ EDIT STATES
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedTitle, setEditedTitle] = useState("");
+  const [editedMessage, setEditedMessage] = useState("");
+
   const adminEmail = "s.hamal2465@student.leedsbeckett.ac.uk";
   const currentUser = auth.currentUser;
 
@@ -42,7 +48,12 @@ export default function PostPage() {
         const postSnap = await getDoc(doc(db, "posts", id));
 
         if (postSnap.exists()) {
-          setPost(postSnap.data());
+          const data = postSnap.data();
+          setPost(data);
+
+          // ✅ prefill edit
+          setEditedTitle(data.title);
+          setEditedMessage(data.message);
         }
 
         const repliesSnap = await getDocs(
@@ -69,7 +80,7 @@ export default function PostPage() {
     loadPost();
   }, [id]);
 
-  // ✅ ADD REPLY + NOTIFICATION
+  // ✅ ADD REPLY
   const handleReply = async () => {
 
     if (!newReply.trim() || !id) return;
@@ -84,12 +95,12 @@ export default function PostPage() {
     const userData = userSnap.data();
 
     await addDoc(collection(db, "posts", id, "replies"), {
-  message: newReply,
-  createdAt: serverTimestamp(),
-  userId: user.uid,
-  userName: userData?.name || "User",
-  country: userData?.country || "" 
-});
+      message: newReply,
+      createdAt: serverTimestamp(),
+      userId: user.uid,
+      userName: userData?.name || "User",
+      country: userData?.country || "" 
+    });
 
     if (post.userId !== user.uid) {
       await addDoc(collection(db, "notifications"), {
@@ -112,6 +123,7 @@ export default function PostPage() {
     setReplies(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
   };
 
+  // ✅ DELETE POST
   const handleDeletePost = async () => {
     if (!id) return;
 
@@ -123,6 +135,7 @@ export default function PostPage() {
     }
   };
 
+  // ✅ DELETE REPLY
   const handleDeleteReply = async (replyId: string) => {
     try {
       if (!id) return;
@@ -132,6 +145,31 @@ export default function PostPage() {
 
     } catch (error) {
       console.error("Delete reply failed:", error);
+    }
+  };
+
+  // ✅ UPDATE POST
+  const handleUpdatePost = async () => {
+    if (!id) return;
+
+    try {
+      await updateDoc(doc(db, "posts", id), {
+        title: editedTitle,
+        message: editedMessage,
+        updatedAt: new Date()
+      });
+
+      setPost((prev: any) => ({
+        ...prev,
+        title: editedTitle,
+        message: editedMessage,
+        updatedAt: new Date()
+      }));
+
+      setIsEditing(false);
+
+    } catch (error) {
+      console.error("Update failed:", error);
     }
   };
 
@@ -159,7 +197,6 @@ export default function PostPage() {
               {post.category}
             </span>
 
-            {/* 3 DOT MENU */}
             <div className="relative">
 
               <button
@@ -174,12 +211,26 @@ export default function PostPage() {
 
               {activeMenu === "post" && (isOwner || isAdmin) && (
                 <div className="absolute right-0 mt-2 bg-white shadow-xl rounded-xl w-36 border z-50">
+
+                  {isOwner && (
+                    <button
+                      onClick={() => {
+                        setIsEditing(true);
+                        setActiveMenu(null);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                    >
+                      Edit Post
+                    </button>
+                  )}
+
                   <button
                     onClick={handleDeletePost}
                     className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-100"
                   >
-                     Delete Post
+                    Delete Post
                   </button>
+
                 </div>
               )}
 
@@ -187,21 +238,58 @@ export default function PostPage() {
 
           </div>
 
-       <p
-        onClick={() => navigate(`/profile/${post.userId}`)}
-        className="text-sm font-semibold cursor-pointer hover:underline mt-2"
-        >
-        {post.userName}
-        {post.country && <Flag country={post.country} />}
-        </p>
-
-          <h1 className="text-2xl font-bold mt-2 mb-3">
-            {post.title}
-          </h1>
-
-          <p className="text-gray-700">
-            {post.message}
+          <p
+            onClick={() => navigate(`/profile/${post.userId}`)}
+            className="text-sm font-semibold cursor-pointer hover:underline mt-2"
+          >
+            {post.userName}
+            {post.country && <Flag country={post.country} />}
           </p>
+
+          {/* ✅ EDIT MODE */}
+          {isEditing ? (
+            <div className="space-y-3 mt-3">
+
+              <input
+                value={editedTitle}
+                onChange={(e) => setEditedTitle(e.target.value)}
+                className="w-full border p-2 rounded"
+              />
+
+              <textarea
+                value={editedMessage}
+                onChange={(e) => setEditedMessage(e.target.value)}
+                className="w-full border p-2 rounded"
+              />
+
+              <div className="flex gap-2">
+                <button
+                  onClick={handleUpdatePost}
+                  className="bg-green-600 text-white px-4 py-2 rounded"
+                >
+                  Save
+                </button>
+
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="bg-gray-300 px-4 py-2 rounded"
+                >
+                  Cancel
+                </button>
+              </div>
+
+            </div>
+          ) : (
+            <>
+              <h1 className="text-2xl font-bold mt-2 mb-3">
+                {post.title}
+              </h1>
+
+              <p className="text-gray-700">
+                {post.message}
+              </p>
+            </>
+          )}
 
         </div>
 
@@ -224,12 +312,12 @@ export default function PostPage() {
 
                 <div>
                   <p
-                 className="text-xs text-gray-500 cursor-pointer hover:underline"
-                 onClick={() => navigate(`/profile/${r.userId}`)}
-                 >
-                {r.userName}
-                {r.country && <Flag country={r.country} />}
-                </p>
+                    className="text-xs text-gray-500 cursor-pointer hover:underline"
+                    onClick={() => navigate(`/profile/${r.userId}`)}
+                  >
+                    {r.userName}
+                    {r.country && <Flag country={r.country} />}
+                  </p>
                   <p>{r.message}</p>
                 </div>
 
@@ -251,7 +339,7 @@ export default function PostPage() {
                         onClick={() => handleDeleteReply(r.id)}
                         className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-100"
                       >
-                         Delete
+                        Delete
                       </button>
                     </div>
                   )}
@@ -262,7 +350,6 @@ export default function PostPage() {
             );
           })}
 
-          {/* INPUT */}
           <div className="flex gap-2 mt-4">
             <input
               value={newReply}
@@ -285,4 +372,4 @@ export default function PostPage() {
 
     </motion.div>
   );
-} 
+}
