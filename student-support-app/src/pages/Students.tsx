@@ -13,73 +13,72 @@ export default function Students() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [reports, setReports] = useState<any[]>([]);
 
-  //  LOAD STUDENTS
+  // ADMIN CHECK
   useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user?.email === "s.hamal2465@student.leedsbeckett.ac.uk") {
+        setIsAdmin(true);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
-    const loadStudents = async () => {
+  // LOAD DATA
+  useEffect(() => {
+    const loadData = async () => {
 
-      const snap = await getDocs(collection(db, "users"));
-
-      const list: any[] = [];
+      const usersSnap = await getDocs(collection(db, "users"));
+      const reportsSnap = await getDocs(collection(db, "reports"));
 
       const currentUserId = auth.currentUser?.uid;
 
-      snap.docs.forEach((docItem) => {
-
-        const data: any = docItem.data();
-
-        //  REMOVE CURRENT USER
-        if (docItem.id === currentUserId) return;
-
-        list.push({
-          id: docItem.id,
-          name: (data.name || "Unnamed user").trim(),
-          country: (data.country || "Unknown").trim(),
-          languages: (data.languages || "").trim(),
-          helpOffer: (data.helpOffer || "").trim(),
-          role: data.role || "user"
+      const list = usersSnap.docs
+        .filter(docItem => docItem.id !== currentUserId)
+        .map(docItem => {
+          const data: any = docItem.data();
+          return {
+            id: docItem.id,
+            name: (data.name || "Unnamed user").trim(),
+            country: (data.country || "Unknown").trim(),
+            languages: (data.languages || "").trim(),
+            helpOffer: (data.helpOffer || "").trim()
+          };
         });
-
-      });
 
       setStudents(list);
 
-      const currentUser = auth.currentUser;
-
-      if (currentUser?.email === "s.hamal2465@student.leedsbeckett.ac.uk") {
-        setIsAdmin(true);
-      }
+      setReports(
+        reportsSnap.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }))
+      );
 
       setLoading(false);
-
     };
 
-    loadStudents();
-
+    loadData();
   }, []);
 
-  //  LISTEN TO ONLINE STATUS
+  // ONLINE STATUS
   useEffect(() => {
     const statusRef = ref(rtdb, "status");
-
     onValue(statusRef, (snapshot) => {
       setStatuses(snapshot.val() || {});
     });
   }, []);
 
-  //  DELETE USER (ADMIN ONLY)
+  // DELETE USER
   const deleteUser = async (userId: string) => {
 
-    const confirmDelete = window.confirm("Are you sure you want to delete this user completely?");
-    if (!confirmDelete) return;
+    if (!window.confirm("Delete this user and all their data?")) return;
 
     try {
-
       const postsSnap = await getDocs(collection(db, "posts"));
 
       for (const postDoc of postsSnap.docs) {
-
         const postData: any = postDoc.data();
 
         if (postData.userId === userId) {
@@ -100,119 +99,181 @@ export default function Students() {
 
       await deleteDoc(doc(db, "users", userId));
 
-      setStudents((prev) => prev.filter((user) => user.id !== userId));
+      setStudents(prev => prev.filter(u => u.id !== userId));
 
-      alert("User and all their data deleted successfully");
+      alert("User deleted");
 
-    } catch (error) {
-
-      console.error("Error deleting user:", error);
-      alert("Failed to delete user");
-
+    } catch (err) {
+      console.error(err);
+      alert("Delete failed");
     }
-
   };
 
-  //  SEARCH FILTER
-  const filteredStudents = students.filter((student) => {
+  // ✅ DISMISS REPORT
+  const dismissReport = async (reportId: string) => {
+    try {
+      await deleteDoc(doc(db, "reports", reportId));
+      setReports(prev => prev.filter(r => r.id !== reportId));
+    } catch (error) {
+      console.error("Dismiss failed:", error);
+    }
+  };
 
-    const query = search.toLowerCase().trim();
-
+  // SEARCH
+  const filteredStudents = students.filter(s => {
+    const q = search.toLowerCase();
     return (
-      student.name?.toLowerCase().includes(query) ||
-      student.country?.toLowerCase().includes(query) ||
-      student.languages?.toLowerCase().includes(query) ||
-      student.helpOffer?.toLowerCase().includes(query)
+      s.name.toLowerCase().includes(q) ||
+      s.country.toLowerCase().includes(q) ||
+      s.languages.toLowerCase().includes(q) ||
+      s.helpOffer.toLowerCase().includes(q)
     );
-
   });
 
-  // LOADING STATE
+  // ✅ MATCH REPORTS (WITH reportId)
+  const reportedUsers = reports
+    .filter(r => r.type === "user")
+    .map(r => {
+      const user = students.find(s => s.id === r.reportedUserId);
+      if (!user) return null;
+      return {
+        ...user,
+        reason: r.reason,
+        reportId: r.id
+      };
+    })
+    .filter(Boolean);
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen text-gray-500">
-        Loading students...
+        Loading...
       </div>
     );
   }
 
   return (
+    <div className="min-h-screen bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4] p-6">
 
-    <div className="min-h-screen bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4] p-4">
+      <div className="max-w-5xl mx-auto space-y-6">
 
-      {/* HEADER */}
-      <div className="max-w-4xl mx-auto bg-white rounded-2xl p-6 shadow text-center">
-        <h1 className="text-2xl sm:text-3xl font-bold text-purple-600">
-          👥 Students Joined ({filteredStudents.length})
-        </h1>
-      </div>
+        {/* HEADER */}
+        <div className="bg-white rounded-2xl p-6 shadow text-center">
+          <h1 className="text-3xl font-bold text-purple-600">
+            👥 Students ({filteredStudents.length})
+          </h1>
+        </div>
 
-      {/* SEARCH */}
-      <div className="max-w-4xl mx-auto mt-4">
-        <input
-          type="text"
-          placeholder="Search students by name, country, language..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full p-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white shadow-sm"
-        />
-      </div>
+        {/* 🔥 REPORTED USERS */}
+        {isAdmin && (
+          <div className="bg-white rounded-2xl p-6 shadow space-y-4">
 
-      {/* STUDENT LIST */}
-      <div className="max-w-4xl mx-auto mt-6 space-y-5">
+            <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+              🚨 Reported Users
+              <span className="text-sm bg-red-100 text-red-600 px-2 py-1 rounded-full">
+                {reportedUsers.length}
+              </span>
+            </h2>
 
-        {filteredStudents.map((student) => {
+            {reportedUsers.length === 0 && (
+              <p className="text-gray-400 text-sm">
+                No reports at the moment.
+              </p>
+            )}
 
-          const isOnline = statuses[student.id]?.state === "online";
-
-          return (
-            <div
-              key={student.id}
-              className="bg-white p-5 sm:p-6 rounded-2xl shadow hover:shadow-md transition"
-            >
-
+            {reportedUsers.map((user: any) => (
               <div
-                onClick={() => navigate(`/profile/${student.id}`)}
-                className="cursor-pointer"
+                key={user.id}
+                className="border-l-4 border-red-500 bg-gray-50 p-4 rounded-xl"
               >
-                <p className="font-semibold text-gray-800 text-lg flex items-center gap-2">
-                  {student.name}
+                <div className="flex justify-between items-start">
 
-                  {/* 🟢 ONLINE STATUS */}
-                  <span
-                    className={`h-3 w-3 rounded-full ${
-                      isOnline ? "bg-green-500" : "bg-gray-300"
-                    }`}
-                  />
-                </p>
+                  <div>
+                    <p className="font-semibold text-gray-800">
+                      {user.name}
+                    </p>
 
-                <p className="text-sm text-gray-500 mt-1">
-                  {student.country}
-                </p>
+                    <p className="text-sm text-gray-500 mt-2">
+                      {user.reason}
+                    </p>
+                  </div>
+
+                  <div className="flex gap-2">
+
+                    {/* DELETE */}
+                    <button
+                      onClick={() => deleteUser(user.id)}
+                      className="px-4 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600"
+                    >
+                      Delete
+                    </button>
+
+                    {/* DISMISS */}
+                    <button
+                      onClick={() => dismissReport(user.reportId)}
+                      className="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                    >
+                      Dismiss
+                    </button>
+
+                  </div>
+
+                </div>
               </div>
+            ))}
 
-              {/* ❗ ADMIN ONLY */}
-              {isAdmin && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteUser(student.id);
-                  }}
-                  className="mt-4 px-4 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
-                >
-                  Delete User
-                </button>
-              )}
-
-            </div>
-          );
-        })}
-
-        {filteredStudents.length === 0 && (
-          <div className="bg-white rounded-2xl shadow p-8 text-center text-gray-500">
-            No students match your search.
           </div>
         )}
+
+        {/* SEARCH */}
+        <input
+          type="text"
+          placeholder="Search students..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full p-3 rounded-xl border border-gray-200 shadow-sm"
+        />
+
+        {/* STUDENTS */}
+        <div className="space-y-4">
+
+          {filteredStudents.map(student => {
+
+            const isOnline = statuses[student.id]?.state === "online";
+
+            return (
+              <div
+                key={student.id}
+                className="bg-white p-5 rounded-2xl shadow hover:shadow-md transition"
+              >
+                <div
+                  onClick={() => navigate(`/profile/${student.id}`)}
+                  className="cursor-pointer"
+                >
+                  <p className="font-semibold flex items-center gap-2">
+                    {student.name}
+                    <span className={`h-3 w-3 rounded-full ${isOnline ? "bg-green-500" : "bg-gray-300"}`} />
+                  </p>
+
+                  <p className="text-sm text-gray-500">
+                    {student.country}
+                  </p>
+                </div>
+
+                {isAdmin && (
+                  <button
+                    onClick={() => deleteUser(student.id)}
+                    className="mt-3 px-4 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600"
+                  >
+                    Delete User
+                  </button>
+                )}
+
+              </div>
+            );
+          })}
+
+        </div>
 
       </div>
 
