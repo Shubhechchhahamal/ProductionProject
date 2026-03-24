@@ -3,6 +3,11 @@ import Navbar from "../components/Navbar";
 export default function Support() {
   const supportItems = [
     {
+      title: "My Hub",
+      desc: "Access support, skills, appointments, events, and university services in one place",
+      link: "https://myhub.leedsbeckett.ac.uk",
+    },
+    {
       title: "Academic Support",
       desc: "Study skills, writing, research help",
       link: "https://libguides.leedsbeckett.ac.uk/home",
@@ -26,6 +31,11 @@ export default function Support() {
       title: "Money & Funding",
       desc: "Scholarships and financial advice",
       link: "https://www.leedsbeckett.ac.uk/student-information/money-advice/funding-from-leeds-beckett/",
+    },
+    {
+      title: "Disability & Inclusion",
+      desc: "Support for disabilities and inclusive learning",
+      link: "https://www.leedsbeckett.ac.uk/student-information/disability-advice/",
     },
     {
       title: "Students' Union",
