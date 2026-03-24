@@ -1,8 +1,33 @@
 import { useNavigate } from "react-router-dom";
+import { auth } from "../firebase";
+import { useState } from "react";
 
 export default function CheckEmail() {
 
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const checkVerification = async () => {
+    setLoading(true);
+    setMessage("");
+
+    const user = auth.currentUser;
+
+    try {
+      await user?.reload();
+
+      if (user?.emailVerified) {
+        navigate("/login");
+      } else {
+        setMessage("Still not verified. Please check your email.");
+      }
+    } catch (err) {
+      setMessage("Something went wrong. Try again.");
+    }
+
+    setLoading(false);
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4]">
@@ -14,16 +39,22 @@ export default function CheckEmail() {
         </h2>
 
         <p className="text-gray-600 mb-6">
-          We’ve sent you a verification link.  
-          Please check your university email and verify your account before logging in.
+          Click the verification link in your email, then return here to continue.
         </p>
 
+        {/* ✅ ONLY BUTTON */}
         <button
-          onClick={() => navigate("/login")}
-          className="bg-purple-500 text-white px-6 py-2 rounded-lg hover:bg-purple-600 transition"
+          onClick={checkVerification}
+          disabled={loading}
+          className="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition"
         >
-          Go to Login
+          {loading ? "Checking..." : "Continue"}
         </button>
+
+        {/* MESSAGE */}
+        {message && (
+          <p className="text-sm text-red-500 mt-3">{message}</p>
+        )}
 
       </div>
 

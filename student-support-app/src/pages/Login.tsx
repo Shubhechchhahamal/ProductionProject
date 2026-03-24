@@ -36,18 +36,22 @@ export default function Login() {
         password
       );
 
-      const user = userCredential.user;
+      // 🔥 FIX STARTS HERE
 
-      // 🔥 VERY IMPORTANT: reload user from Firebase
-      await user.reload();
+      // ✅ Reload user properly
+      await userCredential.user.reload();
 
-      // ❗ BLOCK unverified users (FIXED HERE)
-      if (!user.emailVerified) {
+      // ✅ Always get fresh user
+      const freshUser = auth.currentUser;
+
+      // ❗ BLOCK unverified users
+      if (!freshUser?.emailVerified) {
         await signOut(auth);
-        setError("Please verify your email before logging in.");
-        setLoading(false);
+        navigate("/check-email");
         return;
       }
+
+      // 🔥 FIX ENDS HERE
 
       // ✅ Success
       navigate("/home");

@@ -17,7 +17,7 @@ import {
  import { useNavigate } from "react-router-dom";
 
 export default function Register() {
-
+ 
   const navigate = useNavigate();
 
   const [name, setName] = useState("");
@@ -73,7 +73,7 @@ export default function Register() {
 
       // SEND VERIFICATION EMAIL
       await sendEmailVerification(user, {
-        url: "https://homeaway-ab63f.web.app/verify-email",
+       url: "https://homeaway-ab63f.web.app/verify-success",
       });
 
      
