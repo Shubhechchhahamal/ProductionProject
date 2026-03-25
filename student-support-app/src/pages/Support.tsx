@@ -45,7 +45,7 @@ export default function Support() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-white">
       <Navbar />
 
       <div className="max-w-5xl mx-auto p-6">
@@ -57,7 +57,7 @@ export default function Support() {
           {supportItems.map((item, index) => (
             <div
               key={index}
-              className="bg-white p-5 rounded-xl shadow hover:shadow-lg transition"
+              className="bg-white p-5 rounded-xl shadow-md border border-purple-100 hover:shadow-lg transition"
             >
               <h2 className="text-xl font-semibold mb-2">
                 {item.title}

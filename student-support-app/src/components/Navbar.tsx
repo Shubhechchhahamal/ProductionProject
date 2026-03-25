@@ -59,22 +59,21 @@ export default function Navbar({
   return (
     <>
       {/* DESKTOP NAVBAR */}
-      <div className="hidden md:block bg-white shadow-sm border-b sticky top-0 z-40">
+      <div className="hidden md:block sticky top-0 z-40 backdrop-blur-md bg-white/70 border-b border-gray-100">
         <div className="w-full px-6 py-4 flex items-center justify-between gap-6">
-          
-          {/* ✅ FIXED HERE (no wrapping) */}
+
           <div className="flex items-center gap-6 text-sm text-gray-600 whitespace-nowrap">
 
-            <Link to="/home" className="text-lg font-bold text-purple-600 whitespace-nowrap">
+            <Link to="/home" className="text-lg font-bold text-purple-600">
               HomeAway
             </Link>
 
-            <Link to="/home" className="hover:text-purple-600">
+            <Link to="/home" className="hover:text-purple-600 transition">
               🏠 Home
             </Link>
 
             <div className="relative">
-              <Link to="/inbox" className="hover:text-purple-600">
+              <Link to="/inbox" className="hover:text-purple-600 transition">
                 💬 Messages
               </Link>
               {unreadMessages > 0 && (
@@ -85,7 +84,7 @@ export default function Navbar({
             </div>
 
             <div className="relative">
-              <Link to="/notifications" className="hover:text-purple-600">
+              <Link to="/notifications" className="hover:text-purple-600 transition">
                 🔔 Notifications
               </Link>
               {unreadNotifications > 0 && (
@@ -97,22 +96,22 @@ export default function Navbar({
 
             <button
               onClick={() => navigate("/students")}
-              className="hover:text-purple-600"
+              className="hover:text-purple-600 transition"
             >
               👥 Students {onlineCount > 0 && `(${onlineCount})`}
             </button>
 
-            <Link to="/support" className="hover:text-purple-600">
+            <Link to="/support" className="hover:text-purple-600 transition">
               🤝 Support
             </Link>
 
-            <Link to="/create-post" className="hover:text-purple-600">
+            <Link to="/create-post" className="hover:text-purple-600 transition">
               ➕ Post
             </Link>
 
             <button
               onClick={() => navigate(`/profile/${auth.currentUser?.uid}`)}
-              className="hover:text-purple-600"
+              className="hover:text-purple-600 transition"
             >
               👤 Profile
             </button>
@@ -126,7 +125,7 @@ export default function Navbar({
 
             <button
               onClick={handleLogout}
-              className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-full"
+              className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-full transition"
             >
               Logout
             </button>
@@ -135,8 +134,9 @@ export default function Navbar({
       </div>
 
       {/* MOBILE BOTTOM NAV */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t shadow-sm">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 backdrop-blur-md bg-white/80 border-t border-gray-100">
         <div className="grid grid-cols-6 items-center text-center py-3">
+
           <button onClick={() => navigate("/home")} className="text-2xl">
             🏠
           </button>
@@ -152,7 +152,10 @@ export default function Navbar({
             )}
           </div>
 
-          <button onClick={() => navigate("/create-post")} className="text-3xl font-bold">
+          <button
+            onClick={() => navigate("/create-post")}
+            className="text-3xl font-bold text-purple-600"
+          >
             +
           </button>
 
@@ -177,8 +180,9 @@ export default function Navbar({
           >
             👤
           </button>
+
         </div>
       </div>
     </>
   );
-} 
+}

@@ -14,7 +14,8 @@ import {
   deleteDoc,
   updateDoc,
   where,
-  getDocs
+  getDocs,
+  increment
 } from "firebase/firestore";
 
 export default function Chat() {
@@ -31,7 +32,6 @@ export default function Chat() {
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
-  // LOAD USER
   useEffect(() => {
     const loadUser = async () => {
       if (!chatId) return;
@@ -60,7 +60,6 @@ export default function Chat() {
     loadUser();
   }, [chatId]);
 
-  // LOAD MESSAGES
   useEffect(() => {
     if (!chatId) return;
 
@@ -94,7 +93,19 @@ export default function Chat() {
     return () => unsubscribe();
   }, [chatId]);
 
-  // MARK NOTIFICATIONS READ
+  useEffect(() => {
+    const resetUnread = async () => {
+      const user = auth.currentUser;
+      if (!user || !chatId) return;
+
+      await updateDoc(doc(db, "chats", chatId), {
+        [`unread.${user.uid}`]: 0
+      });
+    };
+
+    resetUnread();
+  }, [chatId]);
+
   useEffect(() => {
     const markNotificationsRead = async () => {
       const user = auth.currentUser;
@@ -122,7 +133,6 @@ export default function Chat() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // SEND MESSAGE
   const sendMessage = async () => {
     const user = auth.currentUser;
 
@@ -143,16 +153,21 @@ export default function Chat() {
       read: false
     });
 
+    await updateDoc(doc(db, "chats", chatId), {
+      lastMessage: text,
+      lastMessageAt: serverTimestamp(),
+      lastMessageSenderId: user.uid,
+      [`unread.${otherUserId}`]: increment(1)
+    });
+
     setText("");
   };
 
-  // UNSEND
   const unsendMessage = async (id: string) => {
     if (!chatId) return;
     await deleteDoc(doc(db, "chats", chatId, "messages", id));
   };
 
-  // EDIT
   const editMessage = async (msg: any) => {
     if (!chatId) return;
 
@@ -165,7 +180,6 @@ export default function Chat() {
     );
   };
 
-  // DELETE CHAT
   const deleteChat = async () => {
     if (!chatId) return;
 
@@ -185,20 +199,17 @@ export default function Chat() {
   };
 
   return (
-    <div className="h-screen bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4] flex flex-col">
+    <div className="h-screen bg-gradient-to-br from-purple-50 to-white flex flex-col">
 
       {/* HEADER */}
-      <div className="glass-effect px-6 py-4 shadow-sm font-semibold text-lg flex justify-between items-center relative">
-        <span>💬 {otherUserName || "Chat"}</span>
+      <div className="bg-white px-6 py-4 shadow-sm font-semibold text-lg flex justify-between items-center relative border-b border-purple-100">
+        <span className="text-purple-600">💬 {otherUserName || "Chat"}</span>
 
         <button onClick={() => setMenuOpen(!menuOpen)}>⋮</button>
 
         {menuOpen && (
           <div className="absolute right-4 top-14 bg-white shadow-lg rounded-lg p-2">
-            <button
-              onClick={deleteChat}
-              className="text-red-500 text-sm"
-            >
+            <button onClick={deleteChat} className="text-red-500 text-sm">
               Delete Chat
             </button>
           </div>
@@ -207,6 +218,7 @@ export default function Chat() {
 
       {/* MESSAGES */}
       <div className="flex-1 overflow-y-auto p-6 space-y-3">
+
         {messages.map((msg) => {
           const isMe = msg.senderId === auth.currentUser?.uid;
 
@@ -215,8 +227,8 @@ export default function Chat() {
               key={msg.id}
               className={`max-w-xs p-3 rounded-2xl relative ${
                 isMe
-                  ? "bg-indigo-500 text-white ml-auto"
-                  : "glass-effect text-gray-800"
+                  ? "bg-purple-600 text-white ml-auto"
+                  : "bg-white text-gray-800 border border-purple-100"
               }`}
             >
               {msg.text}
@@ -249,17 +261,17 @@ export default function Chat() {
       </div>
 
       {/* INPUT */}
-      <div className="glass-effect p-4 flex gap-3">
+      <div className="bg-white p-4 flex gap-3 border-t border-purple-100">
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Type a message..."
-          className="flex-1 p-3 rounded-lg border outline-none"
+          className="flex-1 p-3 rounded-lg border outline-none focus:ring-2 focus:ring-purple-500"
         />
 
         <button
           onClick={sendMessage}
-          className="bg-indigo-500 text-white px-5 rounded-lg"
+          className="bg-purple-600 text-white px-5 rounded-lg hover:bg-purple-700"
         >
           Send
         </button>

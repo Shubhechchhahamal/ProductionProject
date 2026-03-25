@@ -18,7 +18,6 @@ export default function Notifications() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // ✅ LOAD NOTIFICATIONS (REAL-TIME)
   useEffect(() => {
 
     const user = auth.currentUser;
@@ -27,7 +26,7 @@ export default function Notifications() {
     const q = query(
       collection(db, "notifications"),
       where("userId", "==", user.uid),
-      orderBy("createdAt", "desc") // remove if index error
+      orderBy("createdAt", "desc")
     );
 
     const unsubscribe = onSnapshot(
@@ -38,13 +37,10 @@ export default function Notifications() {
         snapshot.forEach((d) => {
           const data = d.data();
 
-          // skip message notifications if needed
           if (data.type === "message") return;
 
           list.push({ id: d.id, ...data });
         });
-
-        console.log("✅ Notifications loaded:", list.length);
 
         setNotifications(list);
         setLoading(false);
@@ -61,23 +57,24 @@ export default function Notifications() {
 
   if (loading) {
     return (
-      <div className="min-h-screen p-6">
-        Loading...
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-white flex items-center justify-center">
+        <div className="bg-white p-6 rounded-xl shadow animate-pulse w-64 h-32"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4] p-6">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-white p-6">
 
       <div className="max-w-3xl mx-auto">
 
-        <h1 className="text-2xl font-bold gradient-text mb-6">
+        {/* TITLE */}
+        <h1 className="text-2xl font-bold text-purple-600 mb-6">
           🔔 Notifications
         </h1>
 
         {notifications.length === 0 ? (
-          <div className="glass-effect p-6 rounded-2xl text-center">
+          <div className="bg-white p-6 rounded-xl shadow-md border border-purple-100 text-center">
             <p className="text-gray-500">No notifications yet.</p>
           </div>
         ) : (
@@ -89,14 +86,12 @@ export default function Notifications() {
                 key={n.id}
                 onClick={async () => {
                   try {
-                    // mark as read ONLY when clicked
                     if (!n.read) {
                       await updateDoc(doc(db, "notifications", n.id), {
                         read: true,
                       });
                     }
 
-                    // navigate
                     if (n.postId) {
                       navigate(`/post/${n.postId}`);
                     }
@@ -105,11 +100,17 @@ export default function Notifications() {
                     console.error("❌ Error updating notification:", err);
                   }
                 }}
-                className="glass-effect p-5 rounded-2xl cursor-pointer hover:scale-[1.02] transition flex justify-between items-center"
+                className={`bg-white p-5 rounded-xl shadow-md border transition cursor-pointer flex justify-between items-center
+                  ${!n.read 
+                    ? "border-l-4 border-purple-600 bg-purple-50 border-purple-200" 
+                    : "border-purple-100"
+                  }`}
               >
 
                 <div>
-                  <p className="text-gray-800 font-medium">
+                  <p className={`font-medium ${
+                    !n.read ? "text-purple-600" : "text-gray-800"
+                  }`}>
                     {n.message}
                   </p>
 
@@ -120,9 +121,9 @@ export default function Notifications() {
                   )}
                 </div>
 
-                {/*  unread indicator */}
+                {/* BADGE */}
                 {!n.read && (
-                  <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                  <span className="bg-purple-600 text-white text-xs px-2 py-1 rounded-full">
                     New
                   </span>
                 )}

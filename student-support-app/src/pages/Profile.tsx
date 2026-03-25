@@ -22,11 +22,9 @@ export default function Profile() {
   const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // REPORT STATES
   const [showReportBox, setShowReportBox] = useState(false);
   const [reportReason, setReportReason] = useState("");
 
-  // MENU STATE
   const [showMenu, setShowMenu] = useState(false);
 
   useEffect(() => {
@@ -144,8 +142,8 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4] flex justify-center items-center">
-        <div className="glass-effect p-6 rounded-xl animate-pulse w-64 h-32"></div>
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-white flex justify-center items-center">
+        <div className="bg-white p-6 rounded-xl animate-pulse w-64 h-32 shadow"></div>
       </div>
     );
   }
@@ -162,22 +160,22 @@ export default function Profile() {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4] p-6">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-white p-6">
 
         <div className="max-w-xl mx-auto">
 
           {/* BACK */}
           <button
-            className="mb-6 text-indigo-500 hover:underline"
+            className="mb-6 text-purple-600 hover:underline"
             onClick={() => navigate(-1)}
           >
             ← Back
           </button>
 
-          {/* PROFILE CARD */}
-          <div className="glass-effect p-8 rounded-2xl shadow text-center relative">
+          {/* CARD */}
+          <div className="bg-white p-8 rounded-2xl shadow-md border border-purple-100 text-center relative">
 
-            {/* 3 DOT MENU */}
+            {/* MENU */}
             {currentUser?.uid !== userData.uid && (
               <div className="absolute top-4 right-4">
 
@@ -207,17 +205,19 @@ export default function Profile() {
               </div>
             )}
 
-            <h1 className="text-2xl font-bold text-gray-800">
+            {/* NAME */}
+            <h1 className="text-2xl font-bold text-purple-600">
               {userData.name || "Unnamed user"}
             </h1>
 
-            <div className="flex items-center justify-center gap-[2px]">
+            {/* COUNTRY */}
+            <div className="flex items-center justify-center gap-[4px] mt-1">
               <span>{userData.country}</span>
               {userData.country && <Flag country={userData.country} />}
             </div>
 
             {userData.yearsInUK && (
-              <p className="text-sm mt-1 text-gray-500">
+              <p className="text-sm mt-2 text-gray-500">
                 In the UK for {userData.yearsInUK} 🇬🇧
               </p>
             )}
@@ -234,9 +234,10 @@ export default function Profile() {
               </p>
             )}
 
+            {/* HELP BOX */}
             {userData.helpOffer && (
-              <div className="mt-5 bg-indigo-50 p-4 rounded-xl">
-                <p className="text-sm font-semibold text-indigo-600">
+              <div className="mt-5 bg-purple-50 p-4 rounded-xl border border-purple-100">
+                <p className="text-sm font-semibold text-purple-600">
                   I can help with
                 </p>
                 <p className="text-sm text-gray-700 mt-1">
@@ -251,7 +252,7 @@ export default function Profile() {
               {currentUser?.uid === userData.uid && (
                 <button
                   onClick={() => navigate("/edit-profile")}
-                  className="bg-indigo-500 text-white px-5 py-2 rounded-lg hover:bg-indigo-600 transition"
+                  className="bg-purple-600 text-white px-5 py-2 rounded-lg hover:bg-purple-700 transition"
                 >
                   Edit Profile
                 </button>
@@ -260,7 +261,7 @@ export default function Profile() {
               {currentUser?.uid !== userData.uid && (
                 <button
                   onClick={startChat}
-                  className="bg-indigo-500 text-white px-5 py-2 rounded-lg hover:bg-indigo-600 transition"
+                  className="bg-purple-600 text-white px-5 py-2 rounded-lg hover:bg-purple-700 transition"
                 >
                   Message
                 </button>
@@ -280,7 +281,7 @@ export default function Profile() {
 
           <div className="bg-white p-6 rounded-xl w-[90%] max-w-md shadow-lg">
 
-            <h2 className="text-lg font-semibold mb-3">
+            <h2 className="text-lg font-semibold mb-3 text-purple-600">
               Report User
             </h2>
 
@@ -288,7 +289,7 @@ export default function Profile() {
               value={reportReason}
               onChange={(e) => setReportReason(e.target.value)}
               placeholder="Describe the issue..."
-              className="w-full border p-3 rounded-lg mb-4 outline-none focus:ring-2 focus:ring-indigo-300"
+              className="w-full border p-3 rounded-lg mb-4 outline-none focus:ring-2 focus:ring-purple-500"
             />
 
             <div className="flex justify-end gap-2">
