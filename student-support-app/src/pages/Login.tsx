@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import {
   signInWithEmailAndPassword,
@@ -21,9 +22,14 @@ export default function Login() {
 
     const normalizedEmail = email.toLowerCase();
 
-    // Restrict to student emails ONLY 
     if (!normalizedEmail.endsWith("@student.leedsbeckett.ac.uk")) {
       setError("Only Leeds Beckett student emails are allowed.");
+      return;
+    }
+
+    // STRONG OFFLINE CHECK
+    if (!navigator.onLine) {
+      setError("You are offline. Please connect to the internet to log in.");
       return;
     }
 
@@ -36,29 +42,35 @@ export default function Login() {
         password
       );
 
-      // Reload user properly
       await userCredential.user.reload();
 
-      // Always get fresh user
       const freshUser = auth.currentUser;
 
-      // Block unverified users
       if (!freshUser?.emailVerified) {
         await signOut(auth);
         navigate("/check-email");
         return;
       }
 
-      // Success
       navigate("/home");
 
     } catch (err: any) {
-      if (err.code === "auth/wrong-password") {
+
+      console.log("LOGIN ERROR:", err);
+
+      // HANDLE ALL NETWORK ERRORS (FINAL FIX)
+      if (
+        err.code === "auth/network-request-failed" ||
+        err.message?.toLowerCase().includes("network") ||
+        err.message?.toLowerCase().includes("failed to fetch")
+      ) {
+        setError("You are offline. Please check your connection.");
+      } else if (err.code === "auth/wrong-password") {
         setError("Incorrect password.");
       } else if (err.code === "auth/user-not-found") {
         setError("No account found.");
       } else {
-        setError(err.message);
+        setError("Something went wrong. Try again.");
       }
     }
 
@@ -74,7 +86,7 @@ export default function Login() {
       >
 
         <h2 className="text-2xl font-bold text-center text-purple-600 mb-6">
-          Welcome Back 👋
+          Welcome Back
         </h2>
 
         <input
@@ -133,3 +145,4 @@ export default function Login() {
     </div>
   );
 }
+

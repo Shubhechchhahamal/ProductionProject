@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { db, auth, storage } from "../firebase";
 import { checkAIModeration } from "../utils/aiModeration";
@@ -23,6 +24,12 @@ export default function CreatePost() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // BLOCK WHEN OFFLINE
+    if (!navigator.onLine) {
+      alert("You are offline. Cannot create post.");
+      return;
+    }
 
     if (!title.trim() || !message.trim()) {
       alert("Please fill all fields");
@@ -88,18 +95,15 @@ export default function CreatePost() {
 
       <div className="max-w-xl mx-auto">
 
-        {/* TITLE */}
         <h1 className="text-3xl font-bold text-purple-600 mb-6 text-center">
-          ✍️ Create a Post
+          Create a Post
         </h1>
 
-        {/* FORM */}
         <form
           onSubmit={handleSubmit}
           className="bg-white p-6 rounded-2xl shadow-md border border-purple-100 space-y-5"
         >
 
-          {/* CATEGORY */}
           <div>
             <label className="block text-sm mb-1 text-gray-600">
               Category
@@ -118,7 +122,6 @@ export default function CreatePost() {
             </select>
           </div>
 
-          {/* TITLE */}
           <div>
             <label className="block text-sm mb-1 text-gray-600">
               Title
@@ -133,7 +136,6 @@ export default function CreatePost() {
             />
           </div>
 
-          {/* MESSAGE */}
           <div>
             <label className="block text-sm mb-1 text-gray-600">
               Message
@@ -147,7 +149,6 @@ export default function CreatePost() {
             />
           </div>
 
-          {/* IMAGES */}
           <div>
             <label className="block text-sm mb-1 text-gray-600">
               Images (max 5)
@@ -174,11 +175,14 @@ export default function CreatePost() {
             />
           </div>
 
-          {/* BUTTON */}
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-purple-600 text-white py-3 rounded-xl font-semibold hover:bg-purple-700 transition"
+            disabled={loading || !navigator.onLine}
+            className={`w-full py-3 rounded-xl font-semibold transition ${
+              !navigator.onLine
+                ? "bg-gray-400 cursor-not-allowed text-white"
+                : "bg-purple-600 text-white hover:bg-purple-700"
+            }`}
           >
             {loading ? "Posting..." : "Create Post"}
           </button>
@@ -190,3 +194,4 @@ export default function CreatePost() {
     </div>
   );
 }
+

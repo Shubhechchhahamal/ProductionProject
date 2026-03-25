@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { db, auth } from "../firebase";
@@ -134,6 +135,12 @@ export default function Chat() {
   }, [messages]);
 
   const sendMessage = async () => {
+    // BLOCK WHEN OFFLINE
+    if (!navigator.onLine) {
+      alert("You are offline. Message cannot be sent.");
+      return;
+    }
+
     const user = auth.currentUser;
 
     if (!user || !text.trim() || !chatId || !otherUserId) return;
@@ -203,7 +210,7 @@ export default function Chat() {
 
       {/* HEADER */}
       <div className="bg-white px-6 py-4 shadow-sm font-semibold text-lg flex justify-between items-center relative border-b border-purple-100">
-        <span className="text-purple-600">💬 {otherUserName || "Chat"}</span>
+        <span className="text-purple-600">{otherUserName || "Chat"}</span>
 
         <button onClick={() => setMenuOpen(!menuOpen)}>⋮</button>
 
@@ -271,7 +278,12 @@ export default function Chat() {
 
         <button
           onClick={sendMessage}
-          className="bg-purple-600 text-white px-5 rounded-lg hover:bg-purple-700"
+          disabled={!navigator.onLine}
+          className={`px-5 rounded-lg ${
+            !navigator.onLine
+              ? "bg-gray-400 cursor-not-allowed text-white"
+              : "bg-purple-600 text-white hover:bg-purple-700"
+          }`}
         >
           Send
         </button>
@@ -279,3 +291,4 @@ export default function Chat() {
     </div>
   );
 }
+

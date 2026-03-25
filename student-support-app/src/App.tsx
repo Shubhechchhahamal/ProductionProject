@@ -1,3 +1,4 @@
+
 import { Routes, Route } from "react-router-dom";
 
 import Home from "./pages/Home";
@@ -6,7 +7,6 @@ import Register from "./pages/Register";
 import ResetPassword from "./pages/ResetPassword";
 import CheckEmail from "./pages/CheckEmail";
 import VerifyEmail from "./pages/VerifyEmail";
-
 
 import { useEffect, useState } from "react";
 import { auth, db } from "./firebase";
@@ -41,6 +41,8 @@ export default function App() {
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
 
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (u) => {
       setUser(u);
@@ -67,7 +69,9 @@ export default function App() {
 
     const unsubscribeMessages = onSnapshot(messagesQuery, (snapshot) => {
       console.log("LIVE MESSAGE COUNT:", snapshot.size);
+
       setUnreadMessages(snapshot.size);
+      localStorage.setItem("unreadMessages", snapshot.size.toString());
     });
 
     const notifQuery = query(
@@ -79,11 +83,16 @@ export default function App() {
     const unsubscribeNotif = onSnapshot(
       notifQuery,
       (snapshot) => {
-        console.log("🔔 NOTIFICATIONS COUNT:", snapshot.size);
+        console.log("NOTIFICATIONS COUNT:", snapshot.size);
+
         setUnreadNotifications(snapshot.size);
+        localStorage.setItem(
+          "unreadNotifications",
+          snapshot.size.toString()
+        );
       },
       (error) => {
-        console.error("❌ Notifications listener error:", error);
+        console.error("Notifications listener error:", error);
       }
     );
 
@@ -93,14 +102,50 @@ export default function App() {
     };
   }, [user]);
 
+  useEffect(() => {
+    const goOffline = () => setIsOffline(true);
+    const goOnline = () => setIsOffline(false);
+
+    window.addEventListener("offline", goOffline);
+    window.addEventListener("online", goOnline);
+
+    return () => {
+      window.removeEventListener("offline", goOffline);
+      window.removeEventListener("online", goOnline);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!navigator.onLine) {
+      const savedMessages = localStorage.getItem("unreadMessages");
+      const savedNotifications = localStorage.getItem("unreadNotifications");
+
+      if (savedMessages) {
+        setUnreadMessages(Number(savedMessages));
+      }
+
+      if (savedNotifications) {
+        setUnreadNotifications(Number(savedNotifications));
+      }
+    }
+  }, []);
+
   const protectedLayout = (page: React.ReactNode) => (
     <ProtectedRoute>
-     <div className="min-h-screen overflow-x-hidden pb-20 md:pb-0">
+      <div className="min-h-screen overflow-x-hidden pb-20 md:pb-0">
+
+        {isOffline && (
+          <div className="bg-yellow-500 text-white text-center py-2 text-sm">
+            You are offline. Some features may not work.
+          </div>
+        )}
+
         <Navbar
           userName={userName}
           unreadMessages={unreadMessages}
           unreadNotifications={unreadNotifications}
         />
+
         {page}
       </div>
     </ProtectedRoute>
@@ -108,7 +153,6 @@ export default function App() {
 
   return (
     <Routes>
-      {/* PUBLIC */}
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Register />} />
@@ -116,7 +160,6 @@ export default function App() {
       <Route path="/check-email" element={<CheckEmail />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
 
-      {/* PROTECTED */}
       <Route path="/home" element={protectedLayout(<Dashboard />)} />
       <Route path="/inbox" element={protectedLayout(<Inbox />)} />
       <Route path="/notifications" element={protectedLayout(<Notifications />)} />
@@ -130,3 +173,4 @@ export default function App() {
     </Routes>
   );
 }
+
