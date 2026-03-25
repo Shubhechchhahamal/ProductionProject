@@ -61,7 +61,6 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4] pb-24 md:pb-0">
 
-      {/* HERO */}
       <div className="max-w-4xl mx-auto mt-6 bg-white rounded-2xl p-6 shadow text-center px-4 sm:px-0">
         <h2 className="text-2xl sm:text-3xl font-bold text-purple-600">
           📈 Community Feed
@@ -71,7 +70,6 @@ export default function Dashboard() {
         </p>
       </div>          
 
-      {/* CATEGORY */}
       <div className="max-w-4xl mx-auto mt-4 flex gap-3 flex-wrap justify-center px-4">
         {categories.map((cat) => (
           <button
@@ -88,7 +86,6 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* POSTS */}
       <div className="max-w-4xl mx-auto mt-6 space-y-5 p-4">
         {filteredPosts.length > 0 ? (
           filteredPosts.map((post) => (
@@ -114,6 +111,14 @@ export default function Dashboard() {
                 {post.message}
               </p>
 
+             {post.imageUrl && (
+             <img
+             src={post.imageUrl}
+             alt="post"
+              className="w-full rounded-lg mt-3"
+              />
+             )}
+
               <div className="flex justify-end mt-4">
                 <span className="text-purple-600 text-sm font-medium">
                   View Details →
@@ -130,4 +135,4 @@ export default function Dashboard() {
 
     </div>
   );
-} 
+}

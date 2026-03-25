@@ -29,7 +29,6 @@ export default function PostPage() {
 
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
 
-  // ✅ EDIT STATES
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState("");
   const [editedMessage, setEditedMessage] = useState("");
@@ -50,8 +49,6 @@ export default function PostPage() {
         if (postSnap.exists()) {
           const data = postSnap.data();
           setPost(data);
-
-          // ✅ prefill edit
           setEditedTitle(data.title);
           setEditedMessage(data.message);
         }
@@ -80,7 +77,6 @@ export default function PostPage() {
     loadPost();
   }, [id]);
 
-  // ✅ ADD REPLY
   const handleReply = async () => {
 
     if (!newReply.trim() || !id) return;
@@ -123,7 +119,6 @@ export default function PostPage() {
     setReplies(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
   };
 
-  // ✅ DELETE POST
   const handleDeletePost = async () => {
     if (!id) return;
 
@@ -135,7 +130,6 @@ export default function PostPage() {
     }
   };
 
-  // ✅ DELETE REPLY
   const handleDeleteReply = async (replyId: string) => {
     try {
       if (!id) return;
@@ -148,7 +142,6 @@ export default function PostPage() {
     }
   };
 
-  // ✅ UPDATE POST
   const handleUpdatePost = async () => {
     if (!id) return;
 
@@ -188,7 +181,6 @@ export default function PostPage() {
 
       <div className="max-w-3xl mx-auto">
 
-        {/* POST */}
         <div className="glass-effect p-6 rounded-2xl shadow mb-6">
 
           <div className="flex justify-between items-start">
@@ -246,7 +238,6 @@ export default function PostPage() {
             {post.country && <Flag country={post.country} />}
           </p>
 
-          {/* ✅ EDIT MODE */}
           {isEditing ? (
             <div className="space-y-3 mt-3">
 
@@ -288,12 +279,18 @@ export default function PostPage() {
               <p className="text-gray-700">
                 {post.message}
               </p>
+
+              {post.imageUrl && (
+                <img
+                  src={post.imageUrl}
+                  className="w-full max-h-96 object-contain rounded-lg mt-4"
+                />
+              )}
             </>
           )}
 
         </div>
 
-        {/* REPLIES */}
         <div className="glass-effect p-6 rounded-2xl">
 
           <h2 className="font-semibold mb-4">
@@ -372,4 +369,4 @@ export default function PostPage() {
 
     </motion.div>
   );
-}
+} 

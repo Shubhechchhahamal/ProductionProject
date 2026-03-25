@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { db, auth } from "../firebase";
+import { db, auth, storage } from "../firebase";
 import { checkAIModeration } from "../utils/aiModeration";
 import {
   collection,
@@ -8,6 +8,7 @@ import {
   getDoc,
   doc
 } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useNavigate } from "react-router-dom";
 
 export default function CreatePost() {
@@ -18,6 +19,7 @@ export default function CreatePost() {
   const [message, setMessage] = useState("");
   const [category, setCategory] = useState("Accommodation"); 
   const [loading, setLoading] = useState(false);
+  const [image, setImage] = useState<File | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
 
@@ -48,13 +50,17 @@ export default function CreatePost() {
         return;
       }
 
-      //  GET USER DATA
       const userDoc = await getDoc(doc(db, "users", user.uid));
       const userData = userDoc.data();
 
-      console.log("USER DATA:", userData); //  DEBUG
+      let imageUrl = "";
 
-      //  SAVE POST (WITH COUNTRY)
+      if (image) {
+        const imageRef = ref(storage, `posts/${Date.now()}_${image.name}`);
+        await uploadBytes(imageRef, image);
+        imageUrl = await getDownloadURL(imageRef);
+      }
+
       await addDoc(collection(db, "posts"), {
         title: title.trim(),
         message: message.trim(),
@@ -62,7 +68,8 @@ export default function CreatePost() {
         createdAt: serverTimestamp(),
         userId: user.uid,
         userName: userData?.name || "User",
-        country: userData?.country || "" 
+        country: userData?.country || "",
+        imageUrl
       });
 
       navigate("/home");
@@ -131,6 +138,22 @@ export default function CreatePost() {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               className="w-full p-3 rounded-lg border h-32 outline-none focus:ring-2 focus:ring-indigo-300"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm mb-1 text-gray-600">
+              Image (optional)
+            </label>
+
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  setImage(e.target.files[0]);
+                }
+              }}
             />
           </div>
 
