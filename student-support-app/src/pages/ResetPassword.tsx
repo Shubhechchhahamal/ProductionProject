@@ -13,8 +13,11 @@ export default function ResetPassword() {
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    setError("");
+    setMessage("");
+
     try {
-      await sendPasswordResetEmail(auth, email);
+      await sendPasswordResetEmail(auth, email.toLowerCase());
       setMessage("Password reset email sent! Check your inbox.");
     } catch (err: any) {
       if (err.code === "auth/user-not-found") {
@@ -26,40 +29,53 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="w-full flex justify-center items-center p-6">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4]">
+
       <form
         onSubmit={handleReset}
-        className="bg-white p-8 rounded-2xl shadow-md w-full max-w-md space-y-4"
+        className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md"
       >
-        <h2 className="text-center text-xl font-semibold text-[#7F5539]">
+        <h2 className="text-2xl font-bold text-center text-purple-600 mb-6">
           Reset Password
         </h2>
 
         <input
           type="email"
           placeholder="Enter your university email"
-          className="w-full p-2 border rounded"
+          className="w-full p-3 mb-4 border rounded-lg outline-none focus:ring-2 focus:ring-purple-300"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          required
         />
 
-        {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-        {message && <p className="text-green-500 text-sm text-center">{message}</p>}
+        {error && (
+          <p className="text-red-500 text-sm mb-3 text-center">
+            {error}
+          </p>
+        )}
+
+        {message && (
+          <p className="text-green-500 text-sm mb-3 text-center">
+            {message}
+          </p>
+        )}
 
         <button
           type="submit"
-          className="bg-[#D6CCC2] w-full py-2 rounded text-[#7F5539] font-semibold hover:bg-[#B08968]"
+          className="w-full bg-purple-500 text-white py-3 rounded-lg hover:bg-purple-600 transition"
         >
           Send Reset Email
         </button>
 
         <p
           onClick={() => navigate("/login")}
-          className="text-center text-sm text-[#B08968] cursor-pointer"
+          className="text-center text-sm text-gray-500 mt-4 cursor-pointer hover:underline"
         >
           Back to Login
         </p>
+
       </form>
+
     </div>
   );
 }

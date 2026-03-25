@@ -4,7 +4,7 @@ import {
   signOut
 } from "firebase/auth";
 import { auth } from "../firebase";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 export default function Login() {
 
@@ -21,7 +21,7 @@ export default function Login() {
 
     const normalizedEmail = email.toLowerCase();
 
-    // ✅ Restrict to student emails ONLY 
+    // Restrict to student emails ONLY 
     if (!normalizedEmail.endsWith("@student.leedsbeckett.ac.uk")) {
       setError("Only Leeds Beckett student emails are allowed.");
       return;
@@ -36,24 +36,20 @@ export default function Login() {
         password
       );
 
-      // 🔥 FIX STARTS HERE
-
-      // ✅ Reload user properly
+      // Reload user properly
       await userCredential.user.reload();
 
-      // ✅ Always get fresh user
+      // Always get fresh user
       const freshUser = auth.currentUser;
 
-      // ❗ BLOCK unverified users
+      // Block unverified users
       if (!freshUser?.emailVerified) {
         await signOut(auth);
         navigate("/check-email");
         return;
       }
 
-      // 🔥 FIX ENDS HERE
-
-      // ✅ Success
+      // Success
       navigate("/home");
 
     } catch (err: any) {
@@ -81,7 +77,6 @@ export default function Login() {
           Welcome Back 👋
         </h2>
 
-        {/* EMAIL */}
         <input
           type="email"
           placeholder="University Email"
@@ -91,7 +86,6 @@ export default function Login() {
           required
         />
 
-        {/* PASSWORD */}
         <input
           type="password"
           placeholder="Password"
@@ -101,14 +95,21 @@ export default function Login() {
           required
         />
 
-        {/* ERROR MESSAGE */}
+        <div className="text-right mb-4">
+          <Link
+            to="/reset-password"
+            className="text-sm text-purple-600 hover:underline"
+          >
+            Forgot Password?
+          </Link>
+        </div>
+
         {error && (
           <p className="text-red-500 text-sm mb-3 text-center">
             {error}
           </p>
         )}
 
-        {/* BUTTON */}
         <button
           type="submit"
           disabled={loading}
@@ -117,7 +118,6 @@ export default function Login() {
           {loading ? "Logging in..." : "Login"}
         </button>
 
-        {/* REGISTER LINK */}
         <p className="text-center text-sm text-gray-500 mt-4">
           Don’t have an account?{" "}
           <span
