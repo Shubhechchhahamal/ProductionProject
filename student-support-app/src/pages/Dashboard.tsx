@@ -56,7 +56,7 @@ export default function Dashboard() {
     "Academic Support",
     "Events & Gatherings",
     "Friends",
-  ]; 
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4] pb-24 md:pb-0">
@@ -68,7 +68,7 @@ export default function Dashboard() {
         <p className="text-gray-500 mt-2 text-sm sm:text-base">
           Connect, share, and discover with fellow international students
         </p>
-      </div>          
+      </div>
 
       <div className="max-w-4xl mx-auto mt-4 flex gap-3 flex-wrap justify-center px-4">
         {categories.map((cat) => (
@@ -111,13 +111,39 @@ export default function Dashboard() {
                 {post.message}
               </p>
 
-             {post.imageUrl && (
-             <img
-             src={post.imageUrl}
-             alt="post"
-              className="w-full rounded-lg mt-3"
-              />
-             )}
+              {(post.images?.length > 0 || post.imageUrl) && (
+
+                // ONE IMAGE → full width
+                post.images?.length === 1 ? (
+                  <img
+                    src={post.images[0]}
+                    alt="post"
+                    className="w-full max-h-[400px] object-contain rounded-lg mt-4"
+                  />
+                ) : (
+
+                  // MULTIPLE IMAGES → grid
+                  
+    <div className="mt-4 flex gap-3 flex-wrap">
+  {post.images?.slice(0, 4).map((img: string, i: number) => (
+    <img
+      key={i}
+      src={img}
+      alt="post"
+      className="w-44 h-44 object-cover rounded-xl"
+    />
+  ))}
+</div>       )
+              )}
+
+              {/* fallback for old single image posts */}
+              {!post.images && post.imageUrl && (
+                <img
+                  src={post.imageUrl}
+                  alt="post"
+                  className="w-full max-h-[400px] object-contain rounded-lg mt-4"
+                />
+              )}
 
               <div className="flex justify-end mt-4">
                 <span className="text-purple-600 text-sm font-medium">

@@ -19,7 +19,9 @@ export default function CreatePost() {
   const [message, setMessage] = useState("");
   const [category, setCategory] = useState("Accommodation"); 
   const [loading, setLoading] = useState(false);
-  const [image, setImage] = useState<File | null>(null);
+
+  // changed from single image to multiple
+  const [images, setImages] = useState<File[]>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
 
@@ -53,12 +55,16 @@ export default function CreatePost() {
       const userDoc = await getDoc(doc(db, "users", user.uid));
       const userData = userDoc.data();
 
-      let imageUrl = "";
+      // upload multiple images
+      let imageUrls: string[] = [];
 
-      if (image) {
-        const imageRef = ref(storage, `posts/${Date.now()}_${image.name}`);
-        await uploadBytes(imageRef, image);
-        imageUrl = await getDownloadURL(imageRef);
+      if (images.length > 0) {
+        for (const img of images) {
+          const imageRef = ref(storage, `posts/${Date.now()}_${img.name}`);
+          await uploadBytes(imageRef, img);
+          const url = await getDownloadURL(imageRef);
+          imageUrls.push(url);
+        }
       }
 
       await addDoc(collection(db, "posts"), {
@@ -69,7 +75,7 @@ export default function CreatePost() {
         userId: user.uid,
         userName: userData?.name || "User",
         country: userData?.country || "",
-        imageUrl
+        images: imageUrls // changed from imageUrl to images array
       });
 
       navigate("/home");
@@ -143,18 +149,30 @@ export default function CreatePost() {
 
           <div>
             <label className="block text-sm mb-1 text-gray-600">
-              Image (optional)
+              Images (max 5)
             </label>
 
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                if (e.target.files && e.target.files[0]) {
-                  setImage(e.target.files[0]);
-                }
-              }}
-            />
+           <input
+         type="file"
+         multiple
+         accept="image/*"
+          onClick={(e) => {
+         (e.target as HTMLInputElement).value = "";
+       }}
+         onChange={(e) => {
+         const files = Array.from(e.target.files || []);
+
+         const updated = [...images, ...files];
+
+          if (updated.length > 5) {
+          alert("You can upload up to 5 images only");
+         return;
+        }
+
+    setImages(updated);
+  }}
+/>
+             
           </div>
 
           <button

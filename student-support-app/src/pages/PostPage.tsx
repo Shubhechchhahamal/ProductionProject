@@ -65,7 +65,7 @@ export default function PostPage() {
             id: doc.id,
             ...doc.data()
           }))
-        );
+        ); 
 
       } catch (error) {
         console.error("Error loading post:", error);
@@ -279,6 +279,30 @@ export default function PostPage() {
               <p className="text-gray-700">
                 {post.message}
               </p>
+
+              {(post.images?.length > 0 || post.imageUrl) && (
+  <div className="mt-4 space-y-4">
+
+    {post.images?.length > 0 &&
+      post.images.map((img: string, i: number) => (
+        <img
+          key={i}
+          src={img}
+          alt="post"
+          className="w-full max-h-[500px] object-contain rounded-lg"
+        />
+      ))}
+
+    {!post.images && post.imageUrl && (
+      <img
+        src={post.imageUrl}
+        alt="post"
+        className="w-full max-h-[500px] object-contain rounded-lg"
+      />
+    )}
+
+  </div>
+)}
 
               {post.imageUrl && (
                 <img
