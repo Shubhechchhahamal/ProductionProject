@@ -232,7 +232,7 @@ export default function Home() {
         </h2>
 
         <p className="mb-6">
-          Join hundreds of students already helping each other.
+          Join a growing community of students helping each other.
         </p>
 
         <Link
