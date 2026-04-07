@@ -101,7 +101,7 @@ While the PWA includes full functionality, the Android application was developed
 
 ---
 
-##  Author
+##  Developer
 
 Shubhechchha Hamal  
 BSc (Hons) Computer Science  
