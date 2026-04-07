@@ -92,7 +92,7 @@ Firestore is used for storing posts, messages, and notifications, while Realtime
 
 ---
 
-## 📌 Project Scope
+## Project Scope
 
 This project focuses on creating a safe, scalable, and accessible support system for international students.
 
