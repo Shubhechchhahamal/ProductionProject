@@ -13,32 +13,21 @@ export default function CheckEmail() {
     setMessage("");
 
     try {
-      await auth.currentUser?.reload();
-
-      const updatedUser = auth.currentUser;
-
-      if (updatedUser?.emailVerified) {
-        // 🔥 FIX: clear stale session + force fresh state
-        await auth.signOut();
-        window.location.href = "/login";
-      } else {
-        setMessage("Still not verified. Please check your email.");
-      }
+      await auth.signOut();
+      window.location.href = "/login";
     } catch (err) {
       setMessage("Something went wrong. Try again.");
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4]">
-
       <div className="bg-white p-8 rounded-2xl shadow-xl text-center max-w-md">
 
         <h2 className="text-2xl font-bold text-purple-600 mb-4">
-          📩 Check your email
-        </h2>
+          Check your email
+       </h2>
 
         <p className="text-gray-600 mb-6">
           Click the verification link in your email, then return here to continue.
@@ -57,7 +46,6 @@ export default function CheckEmail() {
         )}
 
       </div>
-
     </div>
   );
 }
