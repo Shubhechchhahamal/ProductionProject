@@ -1,10 +1,8 @@
-import { useNavigate } from "react-router-dom";
 import { auth } from "../firebase";
 import { useState } from "react";
 
 export default function CheckEmail() {
 
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
