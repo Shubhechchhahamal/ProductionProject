@@ -12,13 +12,15 @@ export default function CheckEmail() {
     setLoading(true);
     setMessage("");
 
-    const user = auth.currentUser;
-
     try {
-      await user?.reload();
+      await auth.currentUser?.reload();
 
-      if (user?.emailVerified) {
-        navigate("/login");
+      const updatedUser = auth.currentUser;
+
+      if (updatedUser?.emailVerified) {
+        // 🔥 FIX: clear stale session + force fresh state
+        await auth.signOut();
+        window.location.href = "/login";
       } else {
         setMessage("Still not verified. Please check your email.");
       }
@@ -42,7 +44,6 @@ export default function CheckEmail() {
           Click the verification link in your email, then return here to continue.
         </p>
 
-        {/* ✅ ONLY BUTTON */}
         <button
           onClick={checkVerification}
           disabled={loading}
@@ -51,7 +52,6 @@ export default function CheckEmail() {
           {loading ? "Checking..." : "Continue"}
         </button>
 
-        {/* MESSAGE */}
         {message && (
           <p className="text-sm text-red-500 mt-3">{message}</p>
         )}
