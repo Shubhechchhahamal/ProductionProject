@@ -120,6 +120,13 @@ export default function Students() {
     );
   });
 
+  // ✅ ONLINE COUNT FIX (excluding current user)
+  const currentUserId = auth.currentUser?.uid;
+
+  const onlineCount = Object.keys(statuses || {}).filter(
+    (uid) => uid !== currentUserId && statuses[uid]?.state === "online"
+  ).length;
+
   const reportedUsers = reports
     .filter(r => r.type === "user")
     .map(r => {
@@ -149,7 +156,7 @@ export default function Students() {
         {/* HEADER */}
         <div className="bg-white rounded-2xl p-6 shadow-md border border-purple-100 text-center">
           <h1 className="text-3xl font-bold text-purple-600">
-            👥 Students ({filteredStudents.length})
+            👥 Students ({onlineCount})
           </h1>
         </div>
 
