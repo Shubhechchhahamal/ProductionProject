@@ -6,18 +6,34 @@ export default function CheckEmail() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  const checkVerification = async () => {
-    setLoading(true);
-    setMessage("");
+ const checkVerification = async () => {
+  setLoading(true);
+  setMessage("");
 
-    try {
-      await auth.signOut();
+  try {
+    const user = auth.currentUser;
+
+    if (!user) {
+      setMessage("No user found. Please login again.");
+      setLoading(false);
+      return;
+    }
+
+    await user.reload(); // refresh user data from Firebase
+
+    if (user.emailVerified) {
+      await auth.signOut(); // clear session
       window.location.href = "/login";
-    } catch (err) {
-      setMessage("Something went wrong. Try again.");
+    } else {
+      setMessage("Please verify your email before continuing.");
       setLoading(false);
     }
-  };
+
+  } catch (err) {
+    setMessage("Something went wrong. Try again.");
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#f5f7fa] to-[#e8ecf4]">

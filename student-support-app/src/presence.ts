@@ -17,13 +17,13 @@ export const setupPresence = () => {
 
   onValue(connectedRef, (snap) => {
     if (snap.val() === true) {
-      // 🟢 ONLINE
+      // ONLINE
       set(userStatusRef, {
         state: "online",
         lastChanged: Date.now(),
       });
 
-      // ⚫ OFFLINE when disconnected
+      //  OFFLINE when disconnected
       onDisconnect(userStatusRef).set({
         state: "offline",
         lastChanged: Date.now(),

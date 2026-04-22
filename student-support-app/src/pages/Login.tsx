@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import {
   signInWithEmailAndPassword,
@@ -27,7 +26,6 @@ export default function Login() {
       return;
     }
 
-    // STRONG OFFLINE CHECK
     if (!navigator.onLine) {
       setError("You are offline. Please connect to the internet to log in.");
       return;
@@ -46,19 +44,27 @@ export default function Login() {
 
       const freshUser = auth.currentUser;
 
-      if (!freshUser?.emailVerified) {
-        await signOut(auth);
-        navigate("/check-email");
+      // ✅ safety check
+      if (!freshUser) {
+        setError("Something went wrong. Please try again.");
+        setLoading(false);
         return;
       }
 
-      navigate("/home");
+      // ✅ email verification check
+      if (!freshUser.emailVerified) {
+        await signOut(auth);
+        window.location.href = "/check-email"; // 🔥 fixed redirect
+        return;
+      }
+
+      // ✅ successful login
+      window.location.href = "/home"; // 🔥 fixed redirect
 
     } catch (err: any) {
 
       console.log("LOGIN ERROR:", err);
 
-      // HANDLE ALL NETWORK ERRORS (FINAL FIX)
       if (
         err.code === "auth/network-request-failed" ||
         err.message?.toLowerCase().includes("network") ||
@@ -145,4 +151,3 @@ export default function Login() {
     </div>
   );
 }
-
