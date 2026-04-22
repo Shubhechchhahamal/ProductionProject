@@ -1,4 +1,3 @@
-
 import { Routes, Route } from "react-router-dom";
 
 import Home from "./pages/Home";
@@ -8,7 +7,7 @@ import ResetPassword from "./pages/ResetPassword";
 import CheckEmail from "./pages/CheckEmail";
 import VerifyEmail from "./pages/VerifyEmail";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { auth, db } from "./firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import type { User } from "firebase/auth";
@@ -40,8 +39,10 @@ export default function App() {
   const [userName] = useState("");
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
-
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  // ✅ Hold reference to presence cleanup function
+  const presenceCleanupRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (u) => {
@@ -49,11 +50,25 @@ export default function App() {
 
       if (u) {
         console.log("USER DETECTED:", u.uid);
-        setupPresence();
+        // ✅ Store cleanup so we can call it on logout
+        const cleanup = setupPresence();
+        if (cleanup) presenceCleanupRef.current = cleanup;
+      } else {
+        // ✅ User logged out — clean up presence
+        if (presenceCleanupRef.current) {
+          presenceCleanupRef.current();
+          presenceCleanupRef.current = null;
+        }
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      // ✅ Clean up presence on unmount
+      if (presenceCleanupRef.current) {
+        presenceCleanupRef.current();
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -69,7 +84,6 @@ export default function App() {
 
     const unsubscribeMessages = onSnapshot(messagesQuery, (snapshot) => {
       console.log("LIVE MESSAGE COUNT:", snapshot.size);
-
       setUnreadMessages(snapshot.size);
       localStorage.setItem("unreadMessages", snapshot.size.toString());
     });
@@ -84,12 +98,8 @@ export default function App() {
       notifQuery,
       (snapshot) => {
         console.log("NOTIFICATIONS COUNT:", snapshot.size);
-
         setUnreadNotifications(snapshot.size);
-        localStorage.setItem(
-          "unreadNotifications",
-          snapshot.size.toString()
-        );
+        localStorage.setItem("unreadNotifications", snapshot.size.toString());
       },
       (error) => {
         console.error("Notifications listener error:", error);
@@ -119,14 +129,8 @@ export default function App() {
     if (!navigator.onLine) {
       const savedMessages = localStorage.getItem("unreadMessages");
       const savedNotifications = localStorage.getItem("unreadNotifications");
-
-      if (savedMessages) {
-        setUnreadMessages(Number(savedMessages));
-      }
-
-      if (savedNotifications) {
-        setUnreadNotifications(Number(savedNotifications));
-      }
+      if (savedMessages) setUnreadMessages(Number(savedMessages));
+      if (savedNotifications) setUnreadNotifications(Number(savedNotifications));
     }
   }, []);
 
@@ -173,4 +177,3 @@ export default function App() {
     </Routes>
   );
 }
-

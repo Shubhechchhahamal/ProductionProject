@@ -26,7 +26,6 @@ export default function Students() {
 
   useEffect(() => {
     const loadData = async () => {
-
       const usersSnap = await getDocs(collection(db, "users"));
       const reportsSnap = await getDocs(collection(db, "reports"));
 
@@ -60,15 +59,16 @@ export default function Students() {
     loadData();
   }, []);
 
+  // ✅ Cleaned up onValue listener
   useEffect(() => {
     const statusRef = ref(rtdb, "status");
-    onValue(statusRef, (snapshot) => {
+    const unsub = onValue(statusRef, (snapshot) => {
       setStatuses(snapshot.val() || {});
     });
+    return () => unsub();
   }, []);
 
   const deleteUser = async (userId: string) => {
-
     if (!window.confirm("Delete this user and all their data?")) return;
 
     try {
@@ -78,7 +78,6 @@ export default function Students() {
         const postData: any = postDoc.data();
 
         if (postData.userId === userId) {
-
           const repliesSnap = await getDocs(
             collection(db, "posts", postDoc.id, "replies")
           );
@@ -94,9 +93,7 @@ export default function Students() {
       }
 
       await deleteDoc(doc(db, "users", userId));
-
       setStudents(prev => prev.filter(u => u.id !== userId));
-
       alert("User deleted");
 
     } catch (err) {
@@ -120,9 +117,8 @@ export default function Students() {
     );
   });
 
-  // ✅ ONLINE COUNT FIX (excluding current user)
+  // ✅ Online count excluding current user
   const currentUserId = auth.currentUser?.uid;
-
   const onlineCount = Object.keys(statuses || {}).filter(
     (uid) => uid !== currentUserId && statuses[uid]?.state === "online"
   ).length;
@@ -150,20 +146,22 @@ export default function Students() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-white p-6">
-
       <div className="max-w-5xl mx-auto space-y-6">
 
         {/* HEADER */}
         <div className="bg-white rounded-2xl p-6 shadow-md border border-purple-100 text-center">
           <h1 className="text-3xl font-bold text-purple-600">
-            👥 Students ({onlineCount})
+            👥 Students ({filteredStudents.length})
           </h1>
+          {/* ✅ Online count shown separately, excluding yourself */}
+          <p className="text-sm text-green-500 mt-1">
+            {onlineCount} online now
+          </p>
         </div>
 
         {/* REPORTED USERS */}
         {isAdmin && (
           <div className="bg-white rounded-2xl p-6 shadow-md border border-purple-100 space-y-4">
-
             <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
               🚨 Reported Users
               <span className="text-sm bg-red-100 text-red-600 px-2 py-1 rounded-full">
@@ -172,9 +170,7 @@ export default function Students() {
             </h2>
 
             {reportedUsers.length === 0 && (
-              <p className="text-gray-400 text-sm">
-                No reports at the moment.
-              </p>
+              <p className="text-gray-400 text-sm">No reports at the moment.</p>
             )}
 
             {reportedUsers.map((user: any) => (
@@ -183,17 +179,10 @@ export default function Students() {
                 className="border-l-4 border-red-500 bg-red-50 p-4 rounded-xl"
               >
                 <div className="flex justify-between items-start">
-
                   <div>
-                    <p className="font-semibold text-gray-800">
-                      {user.name}
-                    </p>
-
-                    <p className="text-sm text-gray-500 mt-2">
-                      {user.reason}
-                    </p>
+                    <p className="font-semibold text-gray-800">{user.name}</p>
+                    <p className="text-sm text-gray-500 mt-2">{user.reason}</p>
                   </div>
-
                   <div className="flex gap-2">
                     <button
                       onClick={() => deleteUser(user.id)}
@@ -201,7 +190,6 @@ export default function Students() {
                     >
                       Delete
                     </button>
-
                     <button
                       onClick={() => dismissReport(user.reportId)}
                       className="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
@@ -209,11 +197,9 @@ export default function Students() {
                       Dismiss
                     </button>
                   </div>
-
                 </div>
               </div>
             ))}
-
           </div>
         )}
 
@@ -226,11 +212,9 @@ export default function Students() {
           className="w-full p-3 rounded-xl border border-purple-100 shadow-sm focus:ring-2 focus:ring-purple-500"
         />
 
-        {/* STUDENTS */}
+        {/* STUDENTS LIST */}
         <div className="space-y-4">
-
           {filteredStudents.map(student => {
-
             const isOnline = statuses[student.id]?.state === "online";
 
             return (
@@ -246,10 +230,7 @@ export default function Students() {
                     {student.name}
                     <span className={`h-3 w-3 rounded-full ${isOnline ? "bg-green-500" : "bg-gray-300"}`} />
                   </p>
-
-                  <p className="text-sm text-gray-500">
-                    {student.country}
-                  </p>
+                  <p className="text-sm text-gray-500">{student.country}</p>
                 </div>
 
                 {isAdmin && (
@@ -260,15 +241,12 @@ export default function Students() {
                     Delete User
                   </button>
                 )}
-
               </div>
             );
           })}
-
         </div>
 
       </div>
-
     </div>
   );
 }
