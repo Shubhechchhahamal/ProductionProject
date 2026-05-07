@@ -3,7 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { signOut } from "firebase/auth";
 import { auth, db, rtdb } from "../firebase";
 import { doc, getDoc } from "firebase/firestore";
-import { ref, onValue } from "firebase/database";
+import { ref, onValue, set } from "firebase/database";
+
 
 export default function Navbar({
   unreadMessages,
@@ -51,10 +52,19 @@ export default function Navbar({
 
   const firstName = userName ? userName.split(" ")[0] : "User";
 
-  const handleLogout = async () => {
-    await signOut(auth);
-    navigate("/login");
-  };
+ const handleLogout = async () => {
+  const user = auth.currentUser;
+
+  if (user) {
+    await set(ref(rtdb, "status/" + user.uid), {
+      state: "offline",
+      lastChanged: Date.now()
+    });
+  }
+
+  await signOut(auth);
+  navigate("/login");
+};
 
   return (
     <>
